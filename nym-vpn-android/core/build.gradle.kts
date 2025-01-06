@@ -16,6 +16,10 @@ android {
 		disable.add("UnsafeOptInUsageError")
 	}
 
+	android {
+		ndkVersion = "25.2.9519653"
+	}
+
 	namespace = "${Constants.NAMESPACE}.${Constants.VPN_LIB_NAME}"
 	compileSdk = Constants.COMPILE_SDK
 
@@ -90,8 +94,13 @@ dependencies {
 
 	implementation(libs.kotlinx.serialization)
 	implementation(libs.timber)
-	implementation(libs.jna)
 	implementation(libs.relinker)
+
+	implementation(libs.jna) {
+		artifact {
+			type = "aar"
+		}
+	}
 
 	testImplementation(libs.junit)
 	androidTestImplementation(libs.androidx.junit)
@@ -109,7 +118,8 @@ tasks.register<Exec>(Constants.BUILD_LIB_TASK) {
 		commandLine("echo", "Skipping library build")
 		return@register
 	}
-	val ndkPath = android.sdkDirectory.resolve("ndk").listFilesOrdered().lastOrNull()?.path ?: System.getenv("ANDROID_NDK_HOME")
+	// prefer system for reproducible builds
+	val ndkPath = System.getenv("ANDROID_NDK_HOME") ?: android.sdkDirectory.resolve("ndk").listFilesOrdered().lastOrNull()?.path
 	commandLine("echo", "NDK HOME: $ndkPath")
 	val script = "${projectDir.path}/src/main/scripts/build-libs.sh"
 	// TODO find a better way to limit builds
