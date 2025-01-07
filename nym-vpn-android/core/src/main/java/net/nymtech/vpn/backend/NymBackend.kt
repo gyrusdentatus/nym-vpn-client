@@ -15,8 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import net.nymtech.ipcalculator.AllowedIpCalculator
 import net.nymtech.vpn.model.BackendEvent
+import net.nymtech.vpn.model.Country
 import net.nymtech.vpn.util.Action
 import net.nymtech.vpn.util.Constants
 import net.nymtech.vpn.util.Constants.LOG_LEVEL
@@ -29,6 +29,8 @@ import net.nymtech.vpn.util.extensions.startServiceByClass
 import nym_vpn_lib.AccountLinks
 import nym_vpn_lib.AccountStateSummary
 import nym_vpn_lib.AndroidTunProvider
+import nym_vpn_lib.GatewayType
+import nym_vpn_lib.SystemMessage
 import nym_vpn_lib.TunnelEvent
 import nym_vpn_lib.TunnelNetworkSettings
 import nym_vpn_lib.TunnelStatusListener
@@ -46,6 +48,7 @@ import nym_vpn_lib.waitForRegisterDevice
 import nym_vpn_lib.waitForUpdateAccount
 import nym_vpn_lib.waitForUpdateDevice
 import timber.log.Timber
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
 
@@ -64,7 +67,6 @@ class NymBackend private constructor(val context: Context) : Backend, TunnelStat
 				}
 			},
 		)
-		NotificationManager.getInstance(context).createNotificationChannel()
 	}
 
 	companion object : SingletonHolder<NymBackend, Context>(::NymBackend) {
@@ -97,10 +99,16 @@ class NymBackend private constructor(val context: Context) : Backend, TunnelStat
 		}
 	}
 
-	private suspend fun waitForInit() {
-		while (!initialized.get()) {
-			delay(5000L)
+	suspend fun waitForInit() {
+		val startTime = System.currentTimeMillis()
+		val timeout = 5000L
+		while (System.currentTimeMillis() - startTime < timeout) {
+			if (initialized.get()) {
+				return
+			}
+			delay(10)
 		}
+		throw TimeoutException("Failed to initialize backend")
 	}
 
 	private suspend fun initEnvironment(environment: Tunnel.Environment) {
@@ -170,6 +178,21 @@ class NymBackend private constructor(val context: Context) : Backend, TunnelStat
 		withContext(ioDispatcher) {
 			waitForInit()
 			forgetAccount()
+		}
+	}
+
+	override suspend fun getGatewayCountries(type: GatewayType, userAgent: UserAgent): List<Country> {
+		return withContext(ioDispatcher) {
+			nym_vpn_lib.getGatewayCountries(type, userAgent, null).map {
+				Country(isoCode = it.twoLetterIsoCountryCode)
+			}
+		}
+	}
+
+	override suspend fun getSystemMessages(): List<SystemMessage> {
+		return withContext(ioDispatcher) {
+			waitForInit()
+			nym_vpn_lib.getSystemMessages()
 		}
 	}
 
@@ -322,7 +345,6 @@ class NymBackend private constructor(val context: Context) : Backend, TunnelStat
 	internal class VpnService : LifecycleVpnService(), AndroidTunProvider {
 		private var owner: NymBackend? = null
 		private var startId by Delegates.notNull<Int>()
-		private val calculator = AllowedIpCalculator()
 		private val notificationManager = NotificationManager.getInstance(this)
 
 		companion object {
