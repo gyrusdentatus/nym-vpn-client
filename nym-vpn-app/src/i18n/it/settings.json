@@ -1,14 +1,11 @@
 {
   "display-theme": "Tema",
-  "feedback": {
-    "title": "Feedsback",
+  "support": {
+    "title": "Supporto",
+    "faq": "Controlla le FAQ",
     "github": "Apri una issue GitHub",
     "matrix": "Unisciti a noi su Matrix",
     "discord": "Unisciti a noi su Discord"
-  },
-  "support": {
-    "title": "Supporto",
-    "faq": "Controlla le FAQ"
   },
   "auto-connect": {
     "title": "Auto-connect",

@@ -3,20 +3,16 @@
     "title": "Ligação Automática",
     "desc": "Ligação automática ao iniciar a aplicação"
   },
-  "feedback": {
-    "title": "Feedback",
-    "github": "Abra uma issue no GitHub",
-    "matrix": "Junte-se a nós no Matrix",
-    "discord": "Junte-se a nós no Discord",
-    "get-in-touch": "Entrar em contacto"
-  },
   "error-monitoring": {
     "title": "Relatórios de erros anónimos",
     "desc": "aplica-se ao reiniciar a aplicação"
   },
   "support": {
     "title": "Suporte",
-    "faq": "Verificar as FAQ"
+    "faq": "Verificar as FAQ",
+    "discord": "Junte-se a nós no Discord",
+    "github": "Abra uma issue no GitHub",
+    "matrix": "Junte-se a nós no Matrix"
   },
   "legal": {
     "title": "Legal",

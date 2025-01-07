@@ -1,13 +1,10 @@
 {
-  "feedback": {
-    "title": "بازخورد",
+  "support": {
+    "title": "پشتیبانی",
+    "faq": "بررسی سوالات متداول",
     "github": "باز کردن مساله در GitHub",
     "matrix": "در Matrix به ما بپیوندید",
     "discord": "در Discord به ما پیوندید"
-  },
-  "support": {
-    "title": "پشتیبانی",
-    "faq": "بررسی سوالات متداول"
   },
   "legal": {
     "title": "حقوقی",

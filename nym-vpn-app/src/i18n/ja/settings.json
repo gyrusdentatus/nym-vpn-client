@@ -10,16 +10,12 @@
   "notifications": {
     "title": "デスクトップ通知"
   },
-  "feedback": {
-    "title": "フィードバック",
-    "github": "GitHubでIssueを作成する",
-    "matrix": "Matrixに参加",
-    "discord": "Discordに参加",
-    "get-in-touch": "お問い合わせ"
-  },
   "support": {
     "title": "サポート",
-    "faq": "FAQをチェック"
+    "faq": "FAQをチェック",
+    "github": "Githubでissueを作成",
+    "matrix": "Matrixに参加",
+    "discord": "Discordに参加"
   },
   "legal": {
     "title": "法務情報",
@@ -37,15 +33,17 @@
   "faq": "よくある質問",
   "display-theme": "ディスプレイモード",
   "quit": "NymVPNを終了する",
-  "login-button": "ログイン",
+  "login-button": "デバイスの接続",
   "monitoring-alert": "変更を反映させるには、アプリを再起動する必要があります。",
   "info": {
     "client-version": "クライアントバージョン",
     "daemon-version": "デーモンバージョン",
-    "network-name": "ネットワーク"
+    "network-name": "ネットワーク",
+    "account-id": "アカウントID",
+    "device-id": "デバイスID"
   },
   "logout-confirmation": {
     "title": "実行しますか？",
-    "description": "再ログインするにはリカバリーフレーズが必要です。"
+    "description": "デバイスを再接続するにはアクセスコードが必要です。"
   }
 }

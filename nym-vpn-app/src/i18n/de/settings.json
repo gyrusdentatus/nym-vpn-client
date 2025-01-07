@@ -12,15 +12,12 @@
     "title": "Anonymisierte Fehlerprotokolle",
     "desc": "aktiviert nach Neustart der App"
   },
-  "feedback": {
-    "title": "Feedback",
+  "support": {
+    "title": "Support",
+    "faq": "Lies die FAQs",
     "github": "Problem auf GitHub melden",
     "matrix": "Tritt unserem Matrix Chat bei",
     "discord": "Tritt unserem Discord Channel bei"
-  },
-  "support": {
-    "title": "Support",
-    "faq": "Lies die FAQs"
   },
   "legal": {
     "title": "Rechtlich",
