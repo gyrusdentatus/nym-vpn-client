@@ -8,7 +8,6 @@ export default {
       transparent: 'transparent',
       current: 'currentColor',
       'baltic-sea': {
-        // [D] bg for top-bar nav
         // [D] bg for network modes
         jaguar: '#2B2831',
         // [L] status-line title text + icon
@@ -18,20 +17,17 @@ export default {
         // [L] network mode title text + icon
         // [L] node location select text value + icon + label
         // [D] button text
-        DEFAULT: '#1C1B1F', // [D] main bg
+        DEFAULT: '#1C1B1F',
       },
-      // [L] main bg
-      'blanc-nacre': '#F2F4F6',
-      // [DL] primary accent
-      melon: '#FB6E4E',
       // [DL] secondary accent
       cornflower: '#7075FF',
       // [DL] error status text
       teaberry: '#E33B5A',
-      'liquid-lava': '#F97316',
       comet: '#625B71',
-      // [DL] "Connected" status text
+      // [DL] Daemon dot 'Ok'
       'vert-menthe': '#2BC761',
+      // [DL] Daemon dot 'NonCompat'
+      'liquid-lava': '#F97316',
       // [DL] "Connected" status bg (combined with 10% opacity)
       'vert-prasin': '#47C45D',
       // [D] main titles text
@@ -85,6 +81,25 @@ export default {
       'poivre-noir': '#484649',
       // [L] bg for snackbar
       seashell: '#FFF2EF',
+
+      /// NEON-SKIN UPDATE //////////////////////////////
+      // [D] main bg
+      // [L] NYM logo fg
+      ash: '#242B2D',
+      octave: {
+        // [D] surface bg
+        DEFAULT: '#32373D',
+        // [D] top-bar bg
+        arsenic: '#374042',
+      },
+      // [L] main bg
+      'faded-lavender': '#EBEEF4',
+      // [DL] Main accent
+      malachite: {
+        DEFAULT: '#14E76F',
+        // [L] link text, button ring
+        moss: '#0B8A42',
+      },
     },
     extend: {
       fontFamily: {

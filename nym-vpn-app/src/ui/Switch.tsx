@@ -13,7 +13,9 @@ function Switch({ checked, onChange, disabled }: SwitchProps) {
       checked={checked}
       onChange={onChange}
       className={clsx([
-        checked ? 'bg-melon' : 'bg-mercury-pinkish dark:bg-gun-powder',
+        checked
+          ? 'bg-ash dark:bg-malachite'
+          : 'bg-mercury-pinkish dark:bg-gun-powder',
         'relative inline-flex h-7 w-11 min-w-11 items-center rounded-full cursor-default',
       ])}
       disabled={disabled}
@@ -22,7 +24,7 @@ function Switch({ checked, onChange, disabled }: SwitchProps) {
         className={clsx([
           checked ? 'translate-x-5' : 'translate-x-1',
           checked
-            ? 'bg-white dark:bg-baltic-sea h-5 w-5'
+            ? 'bg-white dark:bg-ash h-5 w-5'
             : 'bg-cement-feet dark:bg-mercury-mist h-4 w-4',
           'inline-block transform rounded-full transition',
         ])}

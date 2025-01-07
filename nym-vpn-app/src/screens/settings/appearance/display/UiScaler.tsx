@@ -29,7 +29,7 @@ function UiScaler() {
     <div
       className={clsx([
         'flex flex-row justify-between items-center gap-10',
-        'bg-white dark:bg-baltic-sea-jaguar',
+        'bg-white dark:bg-octave',
         'px-6 py-4 rounded-lg',
       ])}
     >
@@ -44,7 +44,7 @@ function UiScaler() {
         onChange={handleChange}
         onMouseUp={setNewFontSize}
         onKeyUp={setNewFontSize}
-        className="range flex flex-1 accent-melon"
+        className="range flex flex-1 accent-malachite"
       />
     </div>
   );
