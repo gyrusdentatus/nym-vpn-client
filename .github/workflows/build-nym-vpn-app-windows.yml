@@ -11,6 +11,11 @@ on:
         description: "nym-vpn-core release tag to use for Windows build (as it bundles the daemon)"
         required: false
         type: string
+      sign:
+        description: "Sign this build using SSL.com. Signing is billed per signature so be 100% sure you want a signed release"
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       # set to true when it is a 'dev' build
@@ -21,16 +26,26 @@ on:
       core_release_tag:
         required: false
         type: string
+      sign:
+        required: false
+        type: boolean
+        default: false
     secrets:
-      WINDOWS_SIGNING_PFX_BASE64:
+      SSL_COM_USERNAME:
         required: true
-      WINDOWS_SIGNING_PFX_PASSWORD:
+      SSL_COM_PASSWORD:
+        required: true
+      SSL_COM_TOTP_SECRET:
         required: true
       TAURI_PRIVATE_KEY:
         required: true
       TAURI_KEY_PASSWORD:
         required: true
       DESKTOP_JS_SENTRY_DSN:
+        required: true
+      WINDOWS_SIGNING_PFX_BASE64:
+        required: true
+      WINDOWS_SIGNING_PFX_PASSWORD:
         required: true
     outputs:
       UPLOAD_DIR_WINDOWS:
@@ -112,10 +127,7 @@ jobs:
       #     name: ${{ env.MULLVAD_LIB_NAME }}.lib
       #     path: ${{ env.TAURI_SRC }}/
       #
-      # - name: Download mullvad lib artifact (winfw.lib)
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: ${{ env.MULLVAD_LIB_NAME }}.dll
+      # - name: Download mullvad      sign: ${{ inputs.sign }}D_LIB_NAME }}.dll
       #     path: ${{ env.TAURI_SRC }}/
       #
       # - name: Download/Unzip/Move wintun.zip, winpcap.zip also move wireguard lib for windows
@@ -219,6 +231,7 @@ jobs:
           npm run gen:licenses:rust
 
       - name: Import signing certificate
+        if: ${{ !inputs.sign }}
         env:
           WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
@@ -229,7 +242,50 @@ jobs:
           Remove-Item -path certificate -include tempCert.txt
           Import-PfxCertificate -FilePath certificate/certificate.pfx -CertStoreLocation Cert:\CurrentUser\My -Password (ConvertTo-SecureString -String $env:WINDOWS_CERTIFICATE_PASSWORD -Force -AsPlainText)
 
-      - name: Build tauri desktop client
+      - name: Download EV CodeSignTool from ssl.com
+        working-directory: nym-vpn-app/src-tauri
+        if: ${{ inputs.sign }}
+        shell: bash
+        run: |
+          curl -L0 https://www.ssl.com/download/codesigntool-for-linux-and-macos/ -o codesigntool.zip
+          unzip codesigntool.zip
+
+      - name: Get EV certificate credential id
+        working-directory: nym-vpn-app/src-tauri
+        if: ${{ inputs.sign }}
+        id: get_credential_ids
+        shell: bash
+        run: |
+          echo "SSL_COM_CREDENTIAL_ID=$(./CodeSignTool.sh get_credential_ids -username=${{ secrets.SSL_COM_USERNAME }} -password=${{ secrets.SSL_COM_PASSWORD }} | sed -n '1!p' | sed 's/- //')" >> "$GITHUB_OUTPUT"
+
+      # Credential_id is obtained with ./CodeSignTool.sh get_credential_ids -username=${{ env.SSL_COM_USERNAME }} -password=${{ env.SSL_COM_PASSWORD }} | sed -n '1!p' | sed 's/- //'
+      # Absolute path to CodeSignTool is required since the tauri signcommand does not execute in the same context as the shell: bash for the step
+      # -override required to override the existing file
+      - name: Add custom sign command to tauri.conf.json
+        working-directory: nym-vpn-app/src-tauri
+        if: ${{ inputs.sign }}
+        shell: bash
+        run: |
+          yq eval --inplace '.bundle.windows +=
+          {
+            "signCommand": {
+              "cmd": "C:\Program Files\Git\bin\bash.EXE",
+              "args": [
+                "/c/actions-runner/_work/nym-vpn-client/nym-vpn-client/nym-vpn-app/src-tauri/CodeSignTool.sh",
+                "sign",
+                "-username ${{ secrets.SSL_COM_USERNAME }}",
+                "-password ${{ secrets.SSL_COM_PASSWORD }}",
+                "-credential_id ${{ steps.get_credential_ids.outputs.SSL_COM_CREDENTIAL_ID }}",
+                "-totp_secret ${{ secrets.SSL_COM_TOTP_SECRET }}",
+                "-program_name NymVPN",
+                "-input_file_path",
+                "%1",
+                "-override"
+              ]
+            }
+          }' tauri.conf.json
+
+      - name: Build tauri desktop client with SSL.com signature
         working-directory: nym-vpn-app/src-tauri
         shell: bash
         env:
@@ -237,8 +293,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           APP_SENTRY_DSN: ${{ secrets.DESKTOP_JS_SENTRY_DSN }}
           RUSTFLAGS: "-L ${{ env.TAURI_SRC }}/x86_64-pc-windows-msvc -L ${{ env.TAURI_SRC }} -Clink-args=/LIBPATH:${{ env.TAURI_SRC }}/x64-${{ env.CPP_BUILD_MODES }}"
-          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
-          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
+          CODE_SIGN_TOOL_PATH: ${{ inputs.sign && 'C:\\actions-runner\\_work\\nym-vpn-client\\nym-vpn-client\\nym-vpn-app\\src-tauri\\' }}
+          WINDOWS_CERTIFICATE: ${{ !inputs.sign && secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ !inputs.sign && secrets.WINDOWS_SIGNING_PFX_PASSWORD }}
           DEV_MODE: ${{ inputs.dev_mode == true }}
         run: |
           if [ "${{ env.CARGO_TARGET }}" = "release" ]; then
