@@ -623,7 +623,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Failure: entry gateway cannot be same as exit router"
+            "value" : "For privacy, NymVPN won't use the same gateway for entry and exit. Reconnect or choose different locations."
           }
         }
       }
@@ -1517,7 +1517,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Help us refine our app during the beta phase! Your feedback is crucial for identifying and resolving issues. Opt-in for anonymous error monitoring (via"
+            "value" : "Help us refine our app! Your feedback is crucial for identifying and resolving issues. Opt-in for anonymous error monitoring (via"
           }
         }
       }
@@ -1539,7 +1539,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Welcome\nto NymVPN beta"
+            "value" : "Welcome\nto NymVPN"
           }
         }
       }
