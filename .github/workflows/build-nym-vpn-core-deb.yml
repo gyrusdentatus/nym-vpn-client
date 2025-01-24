@@ -1,11 +1,16 @@
 name: build-nym-vpn-core-deb
-on: [workflow_dispatch, workflow_call]
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/build-nym-vpn-core-deb.yml"
+  workflow_call:
 
 env:
   CARGO_TERM_COLOR: always
   CARGO_TARGET: release
   WG_GO_LIB_PATH: ${{ github.workspace }}/build/lib/x86_64-unknown-linux-gnu
-  WG_GO_LIB_NAME: wireguard-go_ubuntu-22.04_x86_64
+  WG_GO_LIB_NAME: wireguard-go_deb_x86_64
   UPLOAD_DIR_DEB: deb_artifacts
 
 jobs:
@@ -40,6 +45,18 @@ jobs:
         with:
           version: "21.12" # 3.21.12: the version on ubuntu 24.04. Don't change this!
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get workspace version
+        id: workspace-version
+        uses: nicolaiunrein/cargo-get@master
+        with:
+          subcommand: workspace.package.version --entry nym-vpn-core
+
+      - name: Install cargo-edit
+        run: cargo install --locked cargo-edit
+
+      - name: Append timestamp if it's a dev version
+        run: ./scripts/append-timestamp-to-version.sh nym-vpn-core/Cargo.toml ${{ steps.workspace-version.outputs.output }}
 
       - name: Download wireguard-go artifacts
         uses: actions/download-artifact@v4

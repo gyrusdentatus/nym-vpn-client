@@ -1,5 +1,10 @@
 name: build-nym-vpn-core-mac
-on: [workflow_dispatch, workflow_call]
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/build-nym-vpn-core-mac.yml"
+  workflow_call:
 
 env:
   CARGO_TERM_COLOR: always
@@ -38,15 +43,9 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download wireguard-go artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ env.WG_GO_LIB_NAME }}
-          path: ${{ env.WG_GO_LIB_PATH }}
-
       - name: Install cargo-get
         run: |
-          cargo install --locked cargo-get
+          cargo install --locked cargo-get || true
 
       - name: Update nym-vpn-apple to use latest core
         run: |
@@ -60,6 +59,24 @@ jobs:
           name: mac-plist-changes.patch
           path: mac-plist-changes.patch
           retention-days: 3
+
+      - name: Get workspace version
+        id: workspace-version
+        uses: nicolaiunrein/cargo-get@master
+        with:
+          subcommand: workspace.package.version --entry nym-vpn-core
+
+      - name: Install cargo-edit
+        run: cargo install --locked cargo-edit || true
+
+      - name: Append timestamp if it's a dev version
+        run: ./scripts/append-timestamp-to-version.sh nym-vpn-core/Cargo.toml ${{ steps.workspace-version.outputs.output }}
+
+      - name: Download wireguard-go artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WG_GO_LIB_NAME }}
+          path: ${{ env.WG_GO_LIB_PATH }}
 
       - name: Build nym-vpn-core (native)
         working-directory: nym-vpn-core
@@ -111,24 +128,3 @@ jobs:
           name: ${{ env.UPLOAD_DIR_MAC }}
           path: ${{ env.UPLOAD_DIR_MAC }}
           retention-days: 1
-
-      # - name: Compile protobuf (health)
-      #   run: |
-      #     protoc --swift_out=. proto/grpc/health.proto
-      #     protoc --grpc-swift_out=. proto/grpc/health.proto
-      #
-      # - name: Compile protobuf (vpn)
-      #   run: |
-      #     protoc --swift_out=. proto/nym/vpn.proto
-      #     protoc --grpc-swift_out=. proto/nym/vpn.proto
-      #
-      # - name: Upload artifacts
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: swift-proto-files
-      #     path: |
-      #       vpn.grpc.swift
-      #       vpn.pb.swift
-      #       health.grpc.swift
-      #       health.pb.swift
-      #     retention-days: 1

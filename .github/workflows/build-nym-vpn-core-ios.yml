@@ -1,6 +1,9 @@
 name: build-nym-vpn-core-ios
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/build-nym-vpn-core-ios.yml"
   workflow_call:
     outputs:
       RUST_VERSION:
@@ -43,6 +46,18 @@ jobs:
         uses: arduino/setup-protoc@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get workspace version
+        id: workspace-version
+        uses: nicolaiunrein/cargo-get@master
+        with:
+          subcommand: workspace.package.version --entry nym-vpn-core
+
+      - name: Install cargo-edit
+        run: cargo install --locked cargo-edit
+
+      - name: Append timestamp if it's a dev version
+        run: ./scripts/append-timestamp-to-version.sh nym-vpn-core/Cargo.toml ${{ steps.workspace-version.outputs.output }}
 
       - name: Download wireguard-go artifacts
         uses: actions/download-artifact@v4
