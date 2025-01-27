@@ -10,7 +10,7 @@ on:
         default: nym-vpn-core-nightly
       publish:
         type: boolean
-        default: true
+        default: false
         required: true
   push:
     tags:
@@ -186,7 +186,7 @@ jobs:
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Publish release
-        if: ${{ inputs.publish == 'true' || inputs.publish == true }}
+        if: ${{ inputs.publish == 'true' || inputs.publish == true || contains(env.TAG_NAME, 'nightly') }}
         run: |
           echo "Setting up the release notes"
           envsubst < "$GITHUB_WORKSPACE/.github/workflows/$NOTES_FILE" > "$RUNNER_TEMP/release-notes.md"
@@ -242,7 +242,7 @@ jobs:
           SOURCE: "ci-builds/"
           REMOTE_HOST: ${{ secrets.CI_WWW_REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.CI_WWW_REMOTE_USER }}
-          TARGET: ${{ secrets.CI_WWW_REMOTE_TARGET }}/builds/nym-vpn-client
+          TARGET: ${{ secrets.CI_WWW_REMOTE_TARGET }}/builds/nym-vpn-client/nym-vpn-core
 
   gen-hashes:
     uses: ./.github/workflows/gen-hashes-json.yml
