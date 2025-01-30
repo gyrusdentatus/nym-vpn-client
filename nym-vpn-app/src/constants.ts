@@ -4,11 +4,10 @@ export const AppName = 'NymVPN';
 // ⚠ keep this default in sync with the one declared in
 // src-tauri/src/states/app.rs
 export const DefaultVpnMode = 'TwoHop';
-export const ConnectionEvent = 'connection-state';
-export const ErrorEvent = 'error';
+export const TunnelStateEvent = 'tunnel-state';
 export const ProgressEvent = 'connection-progress';
 export const DaemonEvent = 'vpnd-status';
-export const StatusUpdateEvent = 'status-update';
+export const MixnetEvent = 'mixnet-event';
 // ⚠ keep this value in sync with the one declared in `index.html`
 export const DefaultRootFontSize = 14; // in px
 // NOTE: when fresh country data is get from daemon, the selected countries

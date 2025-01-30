@@ -46,7 +46,6 @@ mod misc;
 mod startup_error;
 mod states;
 mod tray;
-mod vpn_status;
 mod window;
 
 pub const APP_NAME: &str = "NymVPN";
@@ -194,35 +193,23 @@ async fn main() -> Result<()> {
             let handle = app.handle().clone();
             let c_grpc = grpc.clone();
             tokio::spawn(async move {
-                info!("starting vpn status spy");
+                info!("starting vpn tunnel spy");
                 loop {
-                    if c_grpc.refresh_vpn_status(&handle).await.is_ok() {
-                        c_grpc.watch_vpn_state(&handle).await.ok();
+                    if c_grpc.tunnel_state(&handle).await.is_ok() {
+                        c_grpc.watch_tunnel_events(&handle).await.ok();
                     }
                     sleep(VPND_RETRY_INTERVAL).await;
-                    debug!("vpn status spy retry");
-                }
-            });
-
-            let handle = app.handle().clone();
-            let c_grpc = grpc.clone();
-            tokio::spawn(async move {
-                info!("starting vpn connection updates spy");
-                loop {
-                    c_grpc.watch_vpn_connection_updates(&handle).await.ok();
-                    sleep(VPND_RETRY_INTERVAL).await;
-                    debug!("vpn connection updates spy retry");
+                    debug!("vpn tunnel spy retry");
                 }
             });
 
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            connection::set_vpn_mode,
-            connection::get_connection_state,
-            connection::connect,
-            connection::disconnect,
-            connection::get_connection_start_time,
+            tunnel::set_vpn_mode,
+            tunnel::get_tunnel_state,
+            tunnel::connect,
+            tunnel::disconnect,
             cmd_dev::get_credentials_mode,
             cmd_dev::set_credentials_mode,
             cmd_db::db_set,

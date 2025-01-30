@@ -14,11 +14,11 @@ import { kvGet } from '../kvStore';
 import {
   AccountLinks,
   CodeDependency,
-  ConnectionStateResponse,
   Country,
   NodeLocation,
   StateDispatch,
   ThemeMode,
+  TunnelStateIpc,
   UiTheme,
   VpnMode,
   VpndStatus,
@@ -27,19 +27,15 @@ import { TauriReq, daemonStatusUpdate, fireRequests } from './helper';
 import { S_STATE } from '../static';
 import { MCache } from '../cache';
 import { Notification } from '../contexts';
+import { tunnelUpdate } from './tunnelUpdate';
 
 // initialize connection state
-const getInitialConnectionState = async () => {
-  return await invoke<ConnectionStateResponse>('get_connection_state');
+const getInitialTunnelState = async () => {
+  return await invoke<TunnelStateIpc>('get_tunnel_state');
 };
 
 const getDaemonStatus = async () => {
   return await invoke<VpndStatus>('daemon_status');
-};
-
-// initialize session start time
-const getSessionStartTime = async () => {
-  return await invoke<number | undefined>('get_connection_start_time');
 };
 
 // init country list
@@ -71,28 +67,11 @@ export async function initFirstBatch(
   dispatch: StateDispatch,
   push: (notification: Notification) => void,
 ) {
-  const initStateRq: TauriReq<typeof getInitialConnectionState> = {
-    name: 'get_connection_state',
-    request: () => getInitialConnectionState(),
-    onFulfilled: ({ state, error }) => {
-      dispatch({ type: 'update-connection-state', state });
-      if (error) {
-        // TODO remove this dirty hack once switched to the new tunnel API
-        if (
-          error.key === 'CSDaemonInternal' &&
-          error.data?.reason.includes('SameEntryAndExitGateway')
-        ) {
-          dispatch({
-            type: 'set-error',
-            error: {
-              key: 'CStateGwDirSameEntryAndExitGw',
-              message: 'Cannot connect to the same entry and exit gateway',
-            },
-          });
-          return;
-        }
-        dispatch({ type: 'set-error', error });
-      }
+  const initStateRq: TauriReq<typeof getInitialTunnelState> = {
+    name: 'get_tunnel_state',
+    request: () => getInitialTunnelState(),
+    onFulfilled: (state) => {
+      tunnelUpdate(state, dispatch);
     },
   };
 
@@ -101,14 +80,6 @@ export async function initFirstBatch(
     request: () => getDaemonStatus(),
     onFulfilled: (status) => {
       daemonStatusUpdate(status, dispatch, push);
-    },
-  };
-
-  const syncConTimeRq: TauriReq<typeof getSessionStartTime> = {
-    name: 'get_connection_start_time',
-    request: () => getSessionStartTime(),
-    onFulfilled: (startTime) => {
-      dispatch({ type: 'set-connection-start-time', startTime });
     },
   };
 
@@ -256,7 +227,6 @@ export async function initFirstBatch(
     initStateRq,
     initDaemonStatusRq,
     getVpnModeRq,
-    syncConTimeRq,
     getEntryLocationRq,
     getExitLocationRq,
     getVersionRq,

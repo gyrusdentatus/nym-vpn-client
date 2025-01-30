@@ -3,51 +3,27 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import i18n from 'i18next';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
-import dayjs from 'dayjs';
 import {
   AccountLinks,
-  BackendError,
-  ConnectionEvent as ConnectionEventData,
+  MixnetEventPayload,
   ProgressEventPayload,
   StateDispatch,
-  StatusUpdatePayload,
+  TunnelStateIpc,
   VpndStatus,
+  isMixnetEventError,
   isVpndNonCompat,
   isVpndOk,
 } from '../types';
 import {
-  ConnectionEvent,
   DaemonEvent,
-  ErrorEvent,
+  MixnetEvent,
   ProgressEvent,
-  StatusUpdateEvent,
+  TunnelStateEvent,
 } from '../constants';
 import { Notification } from '../contexts';
 import { daemonStatusUpdate } from './helper';
 import { MCache } from '../cache';
-
-function handleError(dispatch: StateDispatch, error?: BackendError | null) {
-  if (!error) {
-    dispatch({ type: 'reset-error' });
-    return;
-  }
-  console.log('received backend error:', error);
-  // TODO remove this dirty hack once switched to the new tunnel API
-  if (
-    error.key === 'CSDaemonInternal' &&
-    error.data?.reason.includes('SameEntryAndExitGateway')
-  ) {
-    dispatch({
-      type: 'set-error',
-      error: {
-        key: 'CStateGwDirSameEntryAndExitGw',
-        message: 'Cannot connect to the same entry and exit gateway',
-      },
-    });
-    return;
-  }
-  dispatch({ type: 'set-error', error });
-}
+import { tunnelUpdate } from './tunnelUpdate';
 
 export function useTauriEvents(
   dispatch: StateDispatch,
@@ -88,62 +64,19 @@ export function useTauriEvents(
   }, [dispatch, push]);
 
   const registerStateListener = useCallback(() => {
-    return listen<ConnectionEventData>(ConnectionEvent, (event) => {
-      if (event.payload.type === 'Failed') {
-        console.log(`received event [${event.event}], connection failed`);
-        handleError(dispatch, event.payload);
-        return;
-      }
-      console.log(
-        `received event [${event.event}], state: ${event.payload.state}`,
-      );
-      switch (event.payload.state) {
-        case 'Connected':
-          dispatch({
-            type: 'set-connected',
-            startTime:
-              (event.payload.start_time as unknown as number) || dayjs().unix(),
-          });
-          handleError(dispatch, event.payload.error);
-          break;
-        case 'Disconnected':
-          dispatch({ type: 'set-disconnected' });
-          handleError(dispatch, event.payload.error);
-          break;
-        case 'Connecting':
-          dispatch({ type: 'update-connection-state', state: 'Connecting' });
-          handleError(dispatch, event.payload.error);
-          break;
-        case 'Disconnecting':
-          dispatch({ type: 'update-connection-state', state: 'Disconnecting' });
-          handleError(dispatch, event.payload.error);
-          break;
-        case 'Unknown':
-          dispatch({ type: 'update-connection-state', state: 'Unknown' });
-          handleError(dispatch, event.payload.error);
-          break;
-      }
+    return listen<TunnelStateIpc>(TunnelStateEvent, (event) => {
+      tunnelUpdate(event.payload, dispatch);
     });
   }, [dispatch]);
 
-  const registerErrorListener = useCallback(() => {
-    return listen<BackendError>(ErrorEvent, (event) => {
-      console.info(`received event [${event.event}]`, event.payload);
-      dispatch({
-        type: 'set-error',
-        error: event.payload,
-      });
-    });
-  }, [dispatch]);
-
-  const registerStatusUpdateListener = useCallback(() => {
-    return listen<StatusUpdatePayload>(StatusUpdateEvent, (event) => {
+  const registerMixnetEventListener = useCallback(() => {
+    return listen<MixnetEventPayload>(MixnetEvent, (event) => {
       const { payload } = event;
-      console.log(`received event [${event.event}]`, payload);
-      if (payload.error) {
+      console.log(`received mixnet event [${event.event}]`, payload);
+      if (isMixnetEventError(payload)) {
         dispatch({
           type: 'set-error',
-          error: payload.error,
+          error: { key: payload.error, message: payload.error },
         });
       }
     });
@@ -176,24 +109,21 @@ export function useTauriEvents(
   useEffect(() => {
     const unlistenDaemon = registerDaemonListener();
     const unlistenState = registerStateListener();
-    const unlistenError = registerErrorListener();
-    const unlistenStatusUpdate = registerStatusUpdateListener();
+    const unlistenMixnetEvent = registerMixnetEventListener();
     const unlistenProgress = registerProgressListener();
     const unlistenThemeChanges = registerThemeChangedListener();
 
     return () => {
       unlistenDaemon.then((f) => f());
       unlistenState.then((f) => f());
-      unlistenError.then((f) => f());
-      unlistenStatusUpdate.then((f) => f());
+      unlistenMixnetEvent.then((f) => f());
       unlistenProgress.then((f) => f());
       unlistenThemeChanges.then((f) => f());
     };
   }, [
     registerDaemonListener,
     registerStateListener,
-    registerErrorListener,
-    registerStatusUpdateListener,
+    registerMixnetEventListener,
     registerProgressListener,
     registerThemeChangedListener,
   ]);

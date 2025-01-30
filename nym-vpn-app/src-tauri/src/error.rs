@@ -5,13 +5,9 @@ use std::{
 
 use nym_vpn_proto::account_error::AccountErrorType;
 use nym_vpn_proto::connect_request_error::ConnectRequestErrorType;
-use nym_vpn_proto::connection_status_update::StatusType;
 use nym_vpn_proto::set_network_request_error::SetNetworkRequestErrorType;
-use nym_vpn_proto::{
-    error::ErrorType as DError, AccountError, ConnectRequestError, GatewayType,
-    SetNetworkRequestError,
-};
-use serde::{Deserialize, Serialize};
+use nym_vpn_proto::{AccountError, ConnectRequestError, GatewayType, SetNetworkRequestError};
+use serde::Serialize;
 use thiserror::Error;
 use tracing::warn;
 use ts_rs::TS;
@@ -20,20 +16,7 @@ use crate::grpc::client::VpndError;
 
 const MAX_REG_DEVICES_ID_PATTERN: &str = "register-device.max-devices-exceeded";
 
-#[derive(Error, Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
-pub enum CmdErrorSource {
-    #[error("daemon error")]
-    DaemonError,
-    #[error("internal error")]
-    InternalError,
-    #[error("caller error")]
-    CallerError,
-    #[error("unknown error")]
-    Unknown,
-}
-
-#[derive(Error, Debug, Serialize, Deserialize, TS, Clone)]
+#[derive(Error, Debug, Serialize, TS, Clone)]
 #[ts(export)]
 /// Generic error type made to be passed to the frontend and
 /// displayed in the UI as localized error message
@@ -121,19 +104,9 @@ impl From<VpndError> for BackendError {
     }
 }
 
-impl From<nym_vpn_proto::Error> for BackendError {
-    fn from(error: nym_vpn_proto::Error) -> Self {
-        Self {
-            message: error.message.clone(),
-            key: error.kind().into(),
-            data: error.details.into(),
-        }
-    }
-}
-
 /// Enum of the possible specialized errors emitted by the daemon
 /// or the app backend side, to be passed to the UI layer
-#[derive(Debug, Serialize, Deserialize, TS, Clone)]
+#[derive(Debug, Serialize, TS, Clone)]
 #[ts(export)]
 pub enum ErrorKey {
     /// Generic unhandled error
@@ -148,52 +121,13 @@ pub enum ErrorKey {
     /// Happens when the app is not connected to a running daemon
     /// and attempts to make a gRPC call
     NotConnectedToDaemon,
-    // Forwarded from proto `error::ErrorType`, connection state update
-    CSDaemonInternal,
-    CSUnhandledExit,
-    CStateNoValidCredential,
-    CStateTimeout,
-    CStateMixnetTimeout,
-    CStateMixnetStoragePaths,
-    CStateMixnetDefaultStorage,
-    CStateMixnetBuildClient,
-    CStateMixnetConnect,
-    CStateMixnetEntryGateway,
-    CStateIprFailedToConnect,
-    CStateGwDir,
-    CStateGwDirLookupGateways,
-    CStateGwDirLookupGatewayId,
-    CStateGwDirLookupRouterAddr,
-    CStateGwDirLookupIp,
-    CStateGwDirEntry,
-    CStateGwDirEntryId,
-    CStateGwDirEntryLocation,
-    CStateGwDirExit,
-    CStateGwDirExitLocation,
-    CStateGwDirSameEntryAndExitGw,
-    CStateOutOfBandwidth,
-    CStateOutOfBandwidthSettingUpTunnel,
-    CStateBringInterfaceUp,
-    CStateFirewallInit,
-    CStateFirewallResetPolicy,
-    CStateDnsInit,
-    CStateDnsSet,
-    CStateFindDefaultInterface,
-    CSAuthenticatorFailedToConnect,
-    CSAuthenticatorConnectTimeout,
-    CSAuthenticatorInvalidResponse,
-    CSAuthenticatorRegistrationDataVerification,
-    CSAuthenticatorEntryGatewaySocketAddr,
-    CSAuthenticatorEntryGatewayIpv4,
-    CSAuthenticatorWrongVersion,
-    CSAuthenticatorMalformedReply,
-    CSAuthenticatorAddressNotFound,
-    CSAuthenticatorAuthenticationNotPossible,
-    CSAddIpv6Route,
-    CSTun,
-    CSRouting,
-    CSWireguardConfig,
-    CSMixnetConnectionMonitor,
+    // Various mixnet events that should be mapped to errors
+    EntryGwDown,
+    ExitGwDownIpv4,
+    ExitGwDownIpv6,
+    ExitGwRoutingErrorIpv4,
+    ExitGwRoutingErrorIpv6,
+    NoBandwidth,
     // Forwarded from proto `account_error::AccountErrorType`
     AccountInvalidMnemonic,
     AccountStorage,
@@ -206,14 +140,6 @@ pub enum ErrorKey {
     ConnectUpdateDevice,
     ConnectRegisterDevice,
     ConnectRequestZkNym,
-    // Forwarded from proto `connection_status_update::StatusType`
-    EntryGatewayNotRouting,
-    ExitRouterPingIpv4,
-    ExitRouterPingIpv6,
-    ExitRouterNotRoutingIpv4,
-    ExitRouterNotRoutingIpv6,
-    UserNoBandwidth,
-    WgTunnelError,
     // Failure when querying countries from gRPC
     GetMixnetEntryCountriesQuery,
     GetMixnetExitCountriesQuery,
@@ -223,67 +149,6 @@ pub enum ErrorKey {
     /// Custom error for the "maximum number of registered devices reached" error as it's not
     /// yet specialized in the backend
     MaxRegisteredDevices,
-}
-
-impl From<DError> for ErrorKey {
-    fn from(value: DError) -> Self {
-        match value {
-            DError::NoValidCredentials => ErrorKey::CStateNoValidCredential,
-            DError::Timeout => ErrorKey::CStateTimeout,
-            DError::MixnetTimeout => ErrorKey::CStateMixnetTimeout,
-            DError::MixnetStoragePaths => ErrorKey::CStateMixnetStoragePaths,
-            DError::MixnetDefaultStorage => ErrorKey::CStateMixnetDefaultStorage,
-            DError::MixnetBuildClient => ErrorKey::CStateMixnetBuildClient,
-            DError::MixnetConnect => ErrorKey::CStateMixnetConnect,
-            DError::MixnetEntryGateway => ErrorKey::CStateMixnetEntryGateway,
-            DError::IprFailedToConnect => ErrorKey::CStateIprFailedToConnect,
-            DError::GatewayDirectory => ErrorKey::CStateGwDir,
-            DError::GatewayDirectoryLookupGateways => ErrorKey::CStateGwDirLookupGateways,
-            DError::GatewayDirectoryLookupGatewayIdentity => ErrorKey::CStateGwDirLookupGatewayId,
-            DError::GatewayDirectoryLookupRouterAddress => ErrorKey::CStateGwDirLookupRouterAddr,
-            DError::GatewayDirectoryLookupIp => ErrorKey::CStateGwDirLookupIp,
-            DError::GatewayDirectoryEntry => ErrorKey::CStateGwDirEntry,
-            DError::GatewayDirectoryEntryId => ErrorKey::CStateGwDirEntryId,
-            DError::GatewayDirectoryEntryLocation => ErrorKey::CStateGwDirEntryLocation,
-            DError::GatewayDirectoryExit => ErrorKey::CStateGwDirExit,
-            DError::GatewayDirectoryExitLocation => ErrorKey::CStateGwDirExitLocation,
-            DError::GatewayDirectorySameEntryAndExitGw => ErrorKey::CStateGwDirSameEntryAndExitGw,
-            DError::OutOfBandwidth => ErrorKey::CStateOutOfBandwidth,
-            DError::OutOfBandwidthWhenSettingUpTunnel => {
-                ErrorKey::CStateOutOfBandwidthSettingUpTunnel
-            }
-            DError::BringInterfaceUp => ErrorKey::CStateBringInterfaceUp,
-            DError::FirewallInit => ErrorKey::CStateFirewallInit,
-            DError::FirewallResetPolicy => ErrorKey::CStateFirewallResetPolicy,
-            DError::DnsInit => ErrorKey::CStateDnsInit,
-            DError::DnsSet => ErrorKey::CStateDnsSet,
-            DError::FindDefaultInterface => ErrorKey::CStateFindDefaultInterface,
-            DError::Internal => ErrorKey::CSDaemonInternal,
-            DError::AuthenticatorFailedToConnect => ErrorKey::CSAuthenticatorFailedToConnect,
-            DError::AuthenticatorConnectTimeout => ErrorKey::CSAuthenticatorConnectTimeout,
-            DError::AuthenticatorInvalidResponse => ErrorKey::CSAuthenticatorInvalidResponse,
-            DError::AuthenticatorRegistrationDataVerification => {
-                ErrorKey::CSAuthenticatorRegistrationDataVerification
-            }
-            DError::AuthenticatorEntryGatewaySocketAddr => {
-                ErrorKey::CSAuthenticatorEntryGatewaySocketAddr
-            }
-            DError::AuthenticatorEntryGatewayIpv4 => ErrorKey::CSAuthenticatorEntryGatewayIpv4,
-            DError::AuthenticatorWrongVersion => ErrorKey::CSAuthenticatorWrongVersion,
-            DError::AuthenticatorMalformedReply => ErrorKey::CSAuthenticatorMalformedReply,
-            DError::AuthenticatorAddressNotFound => ErrorKey::CSAuthenticatorAddressNotFound,
-            DError::AuthenticatorAuthenticationNotPossible => {
-                ErrorKey::CSAuthenticatorAuthenticationNotPossible
-            }
-            DError::AddIpv6Route => ErrorKey::CSAddIpv6Route,
-            DError::Tun => ErrorKey::CSTun,
-            DError::Routing => ErrorKey::CSRouting,
-            DError::WireguardConfig => ErrorKey::CSWireguardConfig,
-            DError::MixnetConnectionMonitor => ErrorKey::CSMixnetConnectionMonitor,
-            DError::UnhandledExit => ErrorKey::CSUnhandledExit,
-            _ => ErrorKey::UnknownError, // `Unspecified` & `Unhandled`
-        }
-    }
 }
 
 impl From<AccountError> for BackendError {
@@ -352,21 +217,6 @@ impl From<ConnectRequestError> for BackendError {
         }
 
         BackendError::new(&message, ErrorKey::from(error.kind()))
-    }
-}
-
-impl From<StatusType> for ErrorKey {
-    fn from(value: StatusType) -> Self {
-        match value {
-            StatusType::EntryGatewayNotRoutingMixnetMessages => ErrorKey::EntryGatewayNotRouting,
-            StatusType::ExitRouterNotRespondingToIpv4Ping => ErrorKey::ExitRouterPingIpv4,
-            StatusType::ExitRouterNotRespondingToIpv6Ping => ErrorKey::ExitRouterPingIpv6,
-            StatusType::ExitRouterNotRoutingIpv4Traffic => ErrorKey::ExitRouterNotRoutingIpv4,
-            StatusType::ExitRouterNotRoutingIpv6Traffic => ErrorKey::ExitRouterNotRoutingIpv6,
-            StatusType::NoBandwidth => ErrorKey::UserNoBandwidth,
-            StatusType::WgTunnelError => ErrorKey::WgTunnelError,
-            _ => ErrorKey::UnknownError, // & `Unspecified`
-        }
     }
 }
 
