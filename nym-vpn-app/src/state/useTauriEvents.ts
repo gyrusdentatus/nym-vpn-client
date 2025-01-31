@@ -8,7 +8,7 @@ import {
   MixnetEventPayload,
   ProgressEventPayload,
   StateDispatch,
-  TunnelStateIpc,
+  TunnelStateEvent as TunnelStatePayload,
   VpndStatus,
   isMixnetEventError,
   isVpndNonCompat,
@@ -21,8 +21,8 @@ import {
   TunnelStateEvent,
 } from '../constants';
 import { Notification } from '../contexts';
-import { daemonStatusUpdate } from './helper';
 import { MCache } from '../cache';
+import { daemonStatusUpdate } from './helper';
 import { tunnelUpdate } from './tunnelUpdate';
 
 export function useTauriEvents(
@@ -64,8 +64,15 @@ export function useTauriEvents(
   }, [dispatch, push]);
 
   const registerStateListener = useCallback(() => {
-    return listen<TunnelStateIpc>(TunnelStateEvent, (event) => {
-      tunnelUpdate(event.payload, dispatch);
+    return listen<TunnelStatePayload>(TunnelStateEvent, (event) => {
+      tunnelUpdate(event.payload.state, dispatch);
+      if (event.payload.error) {
+        console.log('tunnel error', event.payload.error);
+        dispatch({
+          type: 'set-error',
+          error: event.payload.error,
+        });
+      }
     });
   }, [dispatch]);
 
