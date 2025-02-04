@@ -3,6 +3,7 @@ pub mod client;
 pub mod error;
 pub mod events;
 pub mod feature_flags;
+mod node;
 pub mod ready_to_connect;
 pub mod system_message;
 pub mod tunnel;
