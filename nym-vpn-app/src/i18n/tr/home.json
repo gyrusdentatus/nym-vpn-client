@@ -1,12 +1,13 @@
 {
-  "disconnect": "Bağlantıyı kes",
+  "disconnect": "Bağlantı kesildi",
   "connect": "Bağlan",
   "status": {
     "connected": "Bağlantı sağlandı",
     "disconnected": "Bağlantı kesildi",
     "connecting": "Bağlanıyor",
     "disconnecting": "Bağlantı koptu",
-    "unknown": "Tanımlanamayan"
+    "error": "Hata",
+    "offline": "Çevrimdışı"
   },
   "last-hop": "Çıkış lokasyonu",
   "first-hop": "Giriş lokasyonu",
@@ -28,14 +29,14 @@
     "desc": "Ödemeler, e-postalar, mesajlar için en iyisi"
   },
   "fast-mode": {
-    "title": "Hızlı (WireGuard)",
+    "title": "Hızlı (WireGuard*)",
     "desc": "İnternet tarama, yayın, paylaşım için en iyisi"
   },
   "select-mode-label": "Mod seçin",
   "modes-dialog": {
     "title": "Mod seçimi",
     "privacy-description": "Bağlantınızı mixnet üzerinden 5 sunucuya yönlendirerek maksimum düzeyde gizliliğin tadını çıkarın. Ödemeleri, e-postaları ve mesajları güvenli bir şekilde yönetmek için mükemmeldir.",
-    "fast-description": "Maksimum hızı 2 sunucu bağlantısıyla deneyimleyin. Hızlı tarama, yayın izleme ve dosya paylaşımı için mükemmeldir.",
+    "fast-description": "Maksimum hızı 2 sunucu bağlantısıyla deneyimleyin. Bu mod, hızlı tarama, akış ve dosya paylaşımı için ideal olan, sansüre dirençli bir WireGuard versiyonu olan AmneziaWG'yi kullanır.",
     "link": "Okumaya devam edin"
   },
   "windows-no-fast-mode": "Hızlı mod WireGuard'a geçirken, bu seçenek geçici olarak kullanılamamaktadır."
