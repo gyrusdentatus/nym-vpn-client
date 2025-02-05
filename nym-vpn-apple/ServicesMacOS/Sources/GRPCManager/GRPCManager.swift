@@ -3,6 +3,7 @@ import NymLogger
 import SwiftUI
 import Base58Swift
 import GRPC
+import ErrorReason
 import Logging
 import NIO
 import NIOConcurrencyHelpers
@@ -31,14 +32,16 @@ public final class GRPCManager: ObservableObject {
     }
 
     @Published public var tunnelStatus: TunnelStatus = .disconnected
-    @Published public var lastError: GeneralNymError?
+    @Published public var errorReason: ErrorReason?
+    @Published public var generalError: GeneralNymError?
     @Published public var connectedDate: Date?
     @Published public var isServing = false
     @Published public var networkName: String?
     public var daemonVersion = "unknown"
 
     public var requiresUpdate: Bool {
-        daemonVersion != AppVersionProvider.libVersion
+        print("daemonVersion: \(daemonVersion), requiredVersion: \(AppVersionProvider.libVersion)")
+        return daemonVersion != AppVersionProvider.libVersion
     }
 
     private init() {
@@ -61,8 +64,7 @@ public final class GRPCManager: ObservableObject {
 
     func setup() {
         setupHealthObserver()
-        setupListenToConnectionStateObserver()
-        setupListenToConnectionStatusObserver()
+        setupListenToTunnelStateChangesObserver()
     }
 
     // MARK: - Info -
@@ -75,35 +77,17 @@ public final class GRPCManager: ObservableObject {
 
                 call.response.whenComplete { [weak self] result in
                     switch result {
-                    case .success(let response):
+                    case let .success(response):
                         self?.daemonVersion = response.version
                         self?.networkName = response.nymNetwork.networkName
                         self?.logger.info("🛜 \(response.nymNetwork.networkName)")
-
                         continuation.resume()
-                    case .failure(let error):
+                    case let .failure(error):
                         continuation.resume(throwing: error)
                     }
                 }
             }
         }
-    }
-
-    public func status() {
-        logger.log(level: .info, "Status")
-        let call = client.vpnStatus(Google_Protobuf_Empty())
-
-        call.response.whenComplete { [weak self] result in
-            switch result {
-            case let .success(response):
-                self?.connectedDate = Date(timeIntervalSince1970: response.details.since.timeIntervalSince1970)
-                self?.updateTunnelStatus(with: response.status)
-            case let .failure(error):
-                print("Call failed with error: \(error)")
-            }
-        }
-
-        _ = try? call.status.wait()
     }
 
     // MARK: - Connection -
@@ -114,9 +98,7 @@ public final class GRPCManager: ObservableObject {
         call.response.whenComplete { [weak self] result in
             switch result {
             case .success(let response):
-                print(response)
                 self?.logger.log(level: .info, "\(response)")
-
             case .failure(let error):
                 self?.logger.log(level: .info, "Failed to connect to VPN: \(error)")
             }
@@ -226,67 +208,6 @@ public final class GRPCManager: ObservableObject {
                     self?.logger.log(level: .error, "\(error.localizedDescription)")
                 }
             }
-        }
-    }
-}
-
-// MARK: - Private -
-private extension GRPCManager {
-    func setupListenToConnectionStateObserver() {
-        let call = client.listenToConnectionStateChanges(Google_Protobuf_Empty()) { [weak self] connectionStateChange in
-            guard let self else { return }
-
-            updateTunnelStatus(with: connectionStateChange.status)
-
-            if !connectionStateChange.error.message.isEmpty {
-                self.lastError = convertToGeneralNymError(from: connectionStateChange.error)
-            }
-        }
-
-        call.status.whenComplete { [weak self] result in
-            switch result {
-            case .success(let status):
-                if status.code == .unavailable {
-                    self?.tunnelStatus = .disconnected
-                    self?.setup()
-                }
-                self?.logger.error("Stream status code: \(status.code)")
-                print("Stream completed with status: \(status)")
-            case .failure(let error):
-                print("Stream failed with error: \(error)")
-            }
-        }
-    }
-
-    func setupListenToConnectionStatusObserver() {
-        let call = client.listenToConnectionStatus(Google_Protobuf_Empty()) { connectionStatusUpdate in
-            // TODO:
-            print("DO ME 2 \(connectionStatusUpdate)")
-        }
-
-        call.status.whenComplete { result in
-            switch result {
-            case .success(let status):
-                print("Stream completed with status: \(status)")
-            case .failure(let error):
-                print("Stream failed with error: \(error)")
-            }
-        }
-    }
-}
-
-private extension GRPCManager {
-    func updateTunnelStatus(with status: Nym_Vpn_ConnectionStatus) {
-        switch status {
-        case .UNRECOGNIZED, .connectionFailed, .notConnected, .statusUnspecified, .unknown:
-            self.tunnelStatus = .disconnected
-            self.connectedDate = nil
-        case .connecting:
-            self.tunnelStatus = .connecting
-        case .connected:
-            self.tunnelStatus = .connected
-        case .disconnecting:
-            self.tunnelStatus = .disconnecting
         }
     }
 }

@@ -43,7 +43,7 @@ public final class CredentialsManager {
                     try FileManager.default.createDirectory(at: dataFolderURL, withIntermediateDirectories: true)
                 }
 
-                try storeAccountMnemonicRaw(mnemonic: credential, path: dataFolderURL.path())
+                try loginRaw(mnemonic: credential, path: dataFolderURL.path())
 #elseif os(macOS)
                 try await helperInstallManager.installIfNeeded()
                 try await grpcManager.storeAccount(with: credential)
@@ -102,7 +102,7 @@ private extension CredentialsManager {
 
     func setupGRPCManagerObservers() {
 #if os(macOS)
-        grpcManager.$lastError.sink { [weak self] error in
+        grpcManager.$generalError.sink { [weak self] error in
             guard let self,
                   error == GeneralNymError.noMnemonicStored
             else {
