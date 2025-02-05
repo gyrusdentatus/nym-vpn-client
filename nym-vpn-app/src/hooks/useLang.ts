@@ -43,7 +43,38 @@ function useLang() {
     [i18n],
   );
 
-  return { set };
+  /**
+   * Get the localized country name
+   *
+   * @param code - Two-letter country code
+   */
+  const getCountryName = useCallback(
+    (code: string) => {
+      const regionNames = new Intl.DisplayNames(i18n.language, {
+        type: 'region',
+        fallback: 'none',
+        style: 'long',
+      });
+      return regionNames.of(code);
+    },
+    [i18n.language],
+  );
+
+  /**
+   * Compare two strings according to the sort order of the current language
+   *
+   * @param a - The first string to compare
+   * @param b - The second string to compare
+   */
+  const compare = useCallback(
+    (a: string, b: string) => {
+      const collator = new Intl.Collator(i18n.language, {});
+      return collator.compare(a, b);
+    },
+    [i18n.language],
+  );
+
+  return { compare, set, getCountryName };
 }
 
 export default useLang;

@@ -5,14 +5,15 @@ import { useDialog, useMainDispatch, useMainState } from '../../contexts';
 import { kvSet } from '../../kvStore';
 import { AppError, Country, NodeHop, StateDispatch } from '../../types';
 import { routes } from '../../router';
-import { useI18nError } from '../../hooks';
+import { useI18nError, useLang } from '../../hooks';
 import { PageAnim, TextInput } from '../../ui';
 import CountryList from './CountryList';
 import LocationDetailsDialog from './LocationDetailsDialog';
 
+// Thin wrapper around `Country` that includes localization
 export type UiCountry = {
   country: Country;
-  i18n?: string;
+  i18n: string;
 };
 
 function NodeLocation({ node }: { node: NodeHop }) {
@@ -33,11 +34,13 @@ function NodeLocation({ node }: { node: NodeHop }) {
 
   const { t } = useTranslation('nodeLocation');
   const { tE } = useI18nError();
+  const { compare, getCountryName } = useLang();
 
-  // the countries list used for UI rendering
+  // the country list as rendered in the UI
   const [uiCountryList, setUiCountryList] = useState<UiCountry[]>([]);
   const selectedCountry =
     node === 'entry' ? entryNodeLocation : exitNodeLocation;
+  const countryList = node === 'entry' ? entryCountryList : exitCountryList;
 
   const [search, setSearch] = useState('');
   const [filteredCountries, setFilteredCountries] =
@@ -55,22 +58,26 @@ function NodeLocation({ node }: { node: NodeHop }) {
     }
   }, [node, vpnMode, fetchWgCountries, fetchMnCountries]);
 
-  // update the UI country list whenever the country list (likely from the backend)
+  // refresh the UI country list whenever the backend country data changes
   useEffect(() => {
-    const countryList = node === 'entry' ? entryCountryList : exitCountryList;
-    const list = [...countryList.map((country) => ({ country }))];
-    setUiCountryList(list);
-    setFilteredCountries(list);
+    const uiList = countryList
+      .map((country) => {
+        return {
+          country,
+          i18n: getCountryName(country.code) || country.name,
+        };
+      })
+      .sort((a, b) => compare(a.i18n, b.i18n));
+    setUiCountryList(uiList);
+    setFilteredCountries(uiList);
     setSearch('');
-  }, [node, entryCountryList, exitCountryList]);
+  }, [countryList, compare, getCountryName]);
 
   const filter = (value: string) => {
     if (value !== '') {
       const list = uiCountryList.filter((uiCountry) => {
-        return uiCountry.country.name
-          .toLowerCase()
-          .startsWith(value.toLowerCase());
-        // Use the toLowerCase() method to make it case-insensitive
+        // toLowerCase() is used to make it case-insensitive
+        return uiCountry.i18n.toLowerCase().includes(value.toLowerCase());
       });
       setFilteredCountries(list);
     } else {
