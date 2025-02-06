@@ -19,7 +19,7 @@ import kotlinx.coroutines.withContext
 import net.nymtech.connectivity.NetworkConnectivityService
 import net.nymtech.connectivity.NetworkStatus
 import net.nymtech.vpn.model.BackendEvent
-import net.nymtech.vpn.model.Country
+import net.nymtech.vpn.model.NymGateway
 import net.nymtech.vpn.util.Constants
 import net.nymtech.vpn.util.Constants.LOG_LEVEL
 import net.nymtech.vpn.util.LifecycleVpnService
@@ -31,6 +31,7 @@ import nym_vpn_lib.AccountLinks
 import nym_vpn_lib.AccountStateSummary
 import nym_vpn_lib.AndroidTunProvider
 import nym_vpn_lib.ConnectivityObserver
+import nym_vpn_lib.GatewayMinPerformance
 import nym_vpn_lib.GatewayType
 import nym_vpn_lib.SystemMessage
 import nym_vpn_lib.TunnelEvent
@@ -225,19 +226,16 @@ class NymBackend private constructor(private val context: Context) : Backend, Tu
 		}
 	}
 
-	override suspend fun getGatewayCountries(type: GatewayType, userAgent: UserAgent): List<Country> {
-		return withContext(ioDispatcher) {
-			initialized.await()
-			nym_vpn_lib.getGatewayCountries(type, userAgent, null).map {
-				Country(isoCode = it.twoLetterIsoCountryCode)
-			}
-		}
-	}
-
 	override suspend fun getSystemMessages(): List<SystemMessage> {
 		return withContext(ioDispatcher) {
 			initialized.await()
 			nym_vpn_lib.getSystemMessages()
+		}
+	}
+
+	override suspend fun getGateways(type: GatewayType, userAgent: UserAgent): List<NymGateway> {
+		return withContext(ioDispatcher) {
+			nym_vpn_lib.getGateways(type, userAgent, GatewayMinPerformance(0u, 0u)).map(NymGateway::from)
 		}
 	}
 

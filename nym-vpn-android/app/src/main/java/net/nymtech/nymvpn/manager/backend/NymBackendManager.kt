@@ -32,7 +32,7 @@ import net.nymtech.vpn.backend.Backend
 import net.nymtech.vpn.backend.NymBackend
 import net.nymtech.vpn.backend.Tunnel
 import net.nymtech.vpn.model.BackendEvent
-import net.nymtech.vpn.model.Country
+import net.nymtech.vpn.model.NymGateway
 import net.nymtech.vpn.util.exceptions.BackendException
 import nym_vpn_lib.AccountLinks
 import nym_vpn_lib.AccountStateSummary
@@ -126,29 +126,11 @@ class NymBackendManager @Inject constructor(
 	}
 
 	private suspend fun getEntryPoint(): EntryPoint {
-		val isManualGatewaysEnabled = settingsRepository.isManualGatewayOverride()
-		val entryCountry = settingsRepository.getFirstHopCountry()
-		if (!isManualGatewaysEnabled) return entryCountry.toEntryPoint()
-		val gatewayId = settingsRepository.getEntryGatewayId() ?: return entryCountry.toEntryPoint()
-		return try {
-			EntryPoint.Gateway(identity = gatewayId)
-		} catch (e: Exception) {
-			Timber.e(e)
-			entryCountry.toEntryPoint()
-		}
+		return settingsRepository.getEntryPoint()
 	}
 
 	private suspend fun getExitPoint(): ExitPoint {
-		val isManualGatewaysEnabled = settingsRepository.isManualGatewayOverride()
-		val exitCountry = settingsRepository.getLastHopCountry()
-		if (!isManualGatewaysEnabled) return exitCountry.toExitPoint()
-		val gatewayId = settingsRepository.getExitGatewayId() ?: return exitCountry.toExitPoint()
-		return try {
-			ExitPoint.Gateway(identity = gatewayId)
-		} catch (e: Exception) {
-			Timber.e(e)
-			exitCountry.toExitPoint()
-		}
+		return settingsRepository.getExitPoint()
 	}
 
 	override suspend fun storeMnemonic(mnemonic: String) {
@@ -199,8 +181,8 @@ class NymBackendManager @Inject constructor(
 		return backend.await().getSystemMessages()
 	}
 
-	override suspend fun getGatewayCountries(gatewayType: GatewayType): List<Country> {
-		return backend.await().getGatewayCountries(gatewayType, context.toUserAgent())
+	override suspend fun getGateways(gatewayType: GatewayType): List<NymGateway> {
+		return backend.await().getGateways(gatewayType, context.toUserAgent())
 	}
 
 	override suspend fun refreshAccountLinks() {

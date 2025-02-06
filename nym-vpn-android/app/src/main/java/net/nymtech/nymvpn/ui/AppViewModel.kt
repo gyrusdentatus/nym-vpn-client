@@ -18,14 +18,13 @@ import net.nymtech.nymvpn.R
 import net.nymtech.nymvpn.data.GatewayRepository
 import net.nymtech.nymvpn.data.SettingsRepository
 import net.nymtech.nymvpn.manager.backend.BackendManager
-import net.nymtech.nymvpn.service.country.CountryCacheService
+import net.nymtech.nymvpn.service.gateway.GatewayCacheService
 import net.nymtech.nymvpn.ui.common.navigation.NavBarState
 import net.nymtech.nymvpn.ui.common.snackbar.SnackbarController
 import net.nymtech.nymvpn.util.Constants
 import net.nymtech.nymvpn.util.LocaleUtil
 import net.nymtech.nymvpn.util.StringValue
 import net.nymtech.vpn.backend.Tunnel
-import net.nymtech.vpn.model.Country
 import nym_vpn_lib.SystemMessage
 import timber.log.Timber
 import javax.inject.Inject
@@ -36,7 +35,7 @@ class AppViewModel
 constructor(
 	private val settingsRepository: SettingsRepository,
 	gatewayRepository: GatewayRepository,
-	private val countryCacheService: CountryCacheService,
+	private val gatewayCacheService: GatewayCacheService,
 	private val backendManager: BackendManager,
 	networkService: NetworkService,
 ) : ViewModel() {
@@ -68,8 +67,6 @@ constructor(
 				settings,
 				gateways,
 				manager,
-				entryCountry = settings.firstHopCountry ?: Country(isLowLatency = true),
-				exitCountry = settings.lastHopCountry ?: Country(isDefault = true),
 				networkStatus = networkStatus,
 			)
 		}.stateIn(
@@ -148,13 +145,13 @@ constructor(
 			_isAppReady.emit(true)
 		}.collect()
 		launch {
-			countryCacheService.updateExitCountriesCache()
+			gatewayCacheService.updateExitGatewayCache()
 		}
 		launch {
-			countryCacheService.updateEntryCountriesCache()
+			gatewayCacheService.updateEntryGatewayCache()
 		}
 		launch {
-			countryCacheService.updateWgCountriesCache()
+			gatewayCacheService.updateWgGatewayCache()
 		}
 		launch {
 			Timber.d("Checking for system messages")
