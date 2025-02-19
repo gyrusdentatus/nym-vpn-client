@@ -26,7 +26,7 @@ import {
 export type StateAction =
   | { type: 'init-done' }
   | { type: 'set-tunnel'; tunnel: Tunnel }
-  | { type: 'set-tunnel-error'; error: TunnelError }
+  | { type: 'set-tunnel-error'; error: TunnelError | null }
   | { type: 'set-daemon-status'; status: DaemonStatus }
   | { type: 'set-daemon-info'; info: DaemonInfo }
   | { type: 'set-vpn-mode'; mode: VpnMode }
@@ -213,6 +213,7 @@ export function reducer(state: AppState, action: StateAction): AppState {
           ? dayjs.unix(action.tunnel.connectedAt)
           : dayjs(),
         tunnelError: null,
+        error: null,
       };
     case 'set-tunnel-disconnected':
       return {
@@ -255,7 +256,7 @@ export function reducer(state: AppState, action: StateAction): AppState {
     case 'set-error':
       return { ...state, error: action.error };
     case 'reset-error':
-      return { ...state, error: null };
+      return { ...state, error: null, tunnelError: null };
     case 'new-progress-message':
       return {
         ...state,

@@ -49,6 +49,7 @@ function Home() {
         });
     } else if (state === 'Disconnected' || state === 'Error') {
       console.info('connect');
+      dispatch({ type: 'reset-error' });
       dispatch({ type: 'connect' });
       invoke('connect', { entry: entryNodeLocation, exit: exitNodeLocation })
         .then((result) => {
