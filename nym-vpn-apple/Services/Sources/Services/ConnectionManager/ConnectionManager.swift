@@ -213,9 +213,7 @@ private extension ConnectionManager {
     func setup() {
 #if os(iOS)
         setupTunnelManagerObservers()
-#endif
-
-#if os(macOS)
+#elseif os(macOS)
         setupGRPCManagerObservers()
 #endif
         setupCountriesManagerObserver()
@@ -228,19 +226,25 @@ private extension ConnectionManager {
 private extension ConnectionManager {
     func setupTunnelManagerObservers() {
         tunnelsManager.$isLoaded.sink { [weak self] isLoaded in
-            self?.isTunnelManagerLoaded = isLoaded
+            Task { @MainActor [weak self] in
+                self?.isTunnelManagerLoaded = isLoaded
+            }
         }
         .store(in: &cancellables)
 
         tunnelsManager.$activeTunnel.sink { [weak self] tunnel in
-            self?.activeTunnel = tunnel
+            Task { @MainActor [weak self] in
+                self?.activeTunnel = tunnel
+            }
         }
         .store(in: &cancellables)
     }
 
     func configureTunnelStatusObserver(tunnel: Tunnel) {
         tunnelStatusUpdateCancellable = tunnel.$status.sink { [weak self] status in
-            self?.currentTunnelStatus = status
+            Task { @MainActor [weak self] in
+                self?.currentTunnelStatus = status
+            }
         }
     }
 }
@@ -250,9 +254,11 @@ private extension ConnectionManager {
 private extension ConnectionManager {
     func setupGRPCManagerObservers() {
         grpcManager.$tunnelStatus.sink { [weak self] status in
-            guard self?.currentTunnelStatus != status else { return }
-            self?.currentTunnelStatus = status
-            self?.scheduleNotificationIfNeeded()
+            Task { @MainActor [weak self] in
+                guard self?.currentTunnelStatus != status else { return }
+                self?.currentTunnelStatus = status
+                self?.scheduleNotificationIfNeeded()
+            }
         }
         .store(in: &cancellables)
     }
@@ -277,13 +283,16 @@ public extension ConnectionManager {
 #if os(iOS)
 private extension ConnectionManager {
     func connect(with config: MixnetConfig) async throws {
-        do {
-            try await tunnelsManager.loadTunnels()
-            let tunnel = try await tunnelsManager.addUpdate(tunnelConfiguration: config)
-            activeTunnel = tunnel
-            try await tunnelsManager.connect(tunnel: tunnel)
-        } catch {
-            throw error
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                try await tunnelsManager.loadTunnels()
+                let tunnel = try await tunnelsManager.addUpdate(tunnelConfiguration: config)
+                activeTunnel = tunnel
+                try await tunnelsManager.connect(tunnel: tunnel)
+            } catch {
+                throw error
+            }
         }
     }
 
@@ -451,14 +460,16 @@ private extension ConnectionManager {
     func setupConnectionErrorObserver() {
 #if os(iOS)
         tunnelsManager.$lastError.sink { [weak self] newError in
-            self?.lastError = newError
+            Task { @MainActor [weak self] in
+                self?.lastError = newError
+            }
         }
         .store(in: &cancellables)
-#endif
-
-#if os(macOS)
+#elseif os(macOS)
         grpcManager.$errorReason.sink { [weak self] newError in
-            self?.lastError = newError
+            Task { @MainActor [weak self] in
+                self?.lastError = newError
+            }
         }
         .store(in: &cancellables)
 #endif

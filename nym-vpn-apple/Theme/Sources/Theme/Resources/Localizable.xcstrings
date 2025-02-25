@@ -617,6 +617,28 @@
         }
       }
     },
+    "errorReason.noAccountStored" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No account stored. Please add a mnemonic."
+          }
+        }
+      }
+    },
+    "errorReason.noDeviceStored" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device not registered. Please retry."
+          }
+        }
+      }
+    },
     "errorReason.offline" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -755,7 +777,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First hop selection"
+            "value" : "Entry"
           }
         }
       }
@@ -778,6 +800,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Random low latency"
+          }
+        }
+      }
+    },
+    "gatewaySelector.servers" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "servers"
           }
         }
       }
@@ -844,6 +877,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Something went wrong. Please try again."
+          }
+        }
+      }
+    },
+    "getewaySelector.close" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        }
+      }
+    },
+    "getewaySelector.identityKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Identity key:"
           }
         }
       }
@@ -1118,7 +1173,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "First hop"
+            "value" : "Entry"
           }
         }
       }
@@ -1129,7 +1184,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last hop"
+            "value" : "Exit"
           }
         }
       }
@@ -1228,7 +1283,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last hop selection"
+            "value" : "Exit"
           }
         }
       }
@@ -1530,24 +1585,68 @@
         }
       }
     },
+    "search.contactUsForHelp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact us for help"
+          }
+        }
+      }
+    },
+    "search.howToRunGateway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how to run a gateway"
+          }
+        }
+      }
+    },
     "search.noResults" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No results found. Please try another search."
+            "value" : "No results found."
           }
         }
       }
     },
-    "searchCountry" : {
+    "search.noResultsSubtitle" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search country"
+            "value" : "Try another location or check the server name."
+          }
+        }
+      }
+    },
+    "search.or" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "or learn"
+          }
+        }
+      }
+    },
+    "search.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search location or server"
           }
         }
       }

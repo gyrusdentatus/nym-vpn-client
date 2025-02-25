@@ -82,19 +82,18 @@ public final class ConfigurationManager {
 #endif
 
     public func setup() async throws {
+        try await configure()
+
         appSettings.$isCredentialImportedPublisher.sink { [weak self] _ in
             self?.updateAccountLinks()
         }
         .store(in: &cancellables)
-
-        try await configure()
     }
 
     public func updateEnv(to env: Env) {
         Task(priority: .background) { [weak self] in
             guard let self else { return }
-            guard isTestFlight || Device.isMacOS,
-                  env != currentEnv
+            guard isTestFlight || Device.isMacOS
             else {
                 return
             }
