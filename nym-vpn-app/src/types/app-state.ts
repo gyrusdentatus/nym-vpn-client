@@ -1,8 +1,15 @@
 import { Dispatch } from 'react';
 import { Dayjs } from 'dayjs';
 import { StateAction } from '../state';
-import { Country, NodeHop, ThemeMode, UiTheme } from './common';
-import { AccountLinks, ErrorKey, NetworkEnv } from './tauri-ipc';
+import { Country, ThemeMode, UiTheme } from './common';
+import {
+  AccountLinks,
+  ErrorKey,
+  Gateway,
+  GatewayType,
+  GatewaysByCountry,
+  NetworkEnv,
+} from './tauri-ipc';
 import { Tunnel, TunnelError } from './tunnel';
 
 export type TunnelState =
@@ -14,7 +21,7 @@ export type TunnelState =
   | 'Offline'
   | 'OfflineAutoReconnect';
 
-export type VpnMode = 'TwoHop' | 'Mixnet';
+export type VpnMode = 'wg' | 'mixnet';
 
 export type CodeDependency = {
   name: string;
@@ -35,7 +42,7 @@ export type AppState = {
   tunnelError?: TunnelError | null;
   daemonStatus: DaemonStatus;
   daemonVersion?: string;
-  networkEnv?: NetworkEnv;
+  networkEnv: NetworkEnv;
   version: string | null;
   error?: AppError | null;
   progressMessages: ConnectProgressMsg[];
@@ -50,22 +57,26 @@ export type AppState = {
   autoConnect: boolean;
   monitoring: boolean;
   desktopNotifications: boolean;
-  entryNodeLocation: Country;
-  exitNodeLocation: Country;
-  entryCountryList: Country[];
-  exitCountryList: Country[];
-  entryCountriesLoading: boolean;
-  exitCountriesLoading: boolean;
-  entryCountriesError?: AppError | null;
-  exitCountriesError?: AppError | null;
+  entryNode: Country | Gateway;
+  exitNode: Country | Gateway;
+  mxEntryGateways: GatewaysByCountry[];
+  mxExitGateways: GatewaysByCountry[];
+  wgGateways: GatewaysByCountry[];
+  mxEntryGatewaysLoading: boolean;
+  mxExitGatewaysLoading: boolean;
+  wgGatewaysLoading: boolean;
+  mxEntryGatewaysError?: AppError | null;
+  mxExitGatewaysError?: AppError | null;
+  wgGatewaysError?: AppError | null;
   rootFontSize: number;
   codeDepsJs: CodeDependency[];
   codeDepsRust: CodeDependency[];
   // TODO just a boolean for now to indicate if the user has added an account
   account: boolean;
   accountLinks?: AccountLinks | null;
-  fetchMnCountries: FetchMnCountriesFn;
-  fetchWgCountries: FetchWgCountriesFn;
+
+  // methods
+  fetchGateways: FetchGatewaysFn;
 };
 
 export type ConnectProgressMsg = 'Initializing' | 'InitDone' | 'Canceling';
@@ -76,8 +87,9 @@ export type ProgressEventPayload = {
 
 export type StateDispatch = Dispatch<StateAction>;
 
-export type FetchMnCountriesFn = (node: NodeHop) => Promise<void> | undefined;
-export type FetchWgCountriesFn = () => Promise<void> | undefined;
+export type FetchGatewaysFn = (
+  nodeType: GatewayType,
+) => Promise<void> | undefined;
 
 export type AppError = {
   message: string;

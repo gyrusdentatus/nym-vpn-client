@@ -1,3 +1,5 @@
+import { Country } from './common';
+
 export type BackendError = {
   message: string;
   key: ErrorKey;
@@ -13,18 +15,21 @@ export type Cli = {
 export type NetworkEnv = 'mainnet' | 'canary' | 'qa' | 'sandbox';
 
 export type DbKey =
-  | 'Monitoring'
-  | 'Autoconnect'
-  | 'UiTheme'
-  | 'UiRootFontSize'
-  | 'UiLanguage'
-  | 'VpnMode'
-  | 'EntryNodeLocation'
-  | 'ExitNodeLocation'
-  | 'WindowSize'
-  | 'WindowPosition'
-  | 'WelcomeScreenSeen'
-  | 'DesktopNotifications';
+  | 'monitoring'
+  | 'ui-theme'
+  | 'ui-root-font-size'
+  | 'ui-language'
+  | 'vpn-mode'
+  | 'entry-node'
+  | 'exit-node'
+  | 'welcome-screen-seen'
+  | 'desktop-notifications'
+  | 'last-network-env'
+  | 'cache-mx-entry-gateways'
+  | 'cache-mx-exit-gateways'
+  | 'cache-wg-gateways'
+  | 'cache-account-id'
+  | 'cache-device-id';
 
 /*
  * Enum of the possible specialized errors emitted by the daemon or from the
@@ -86,3 +91,34 @@ export type AccountLinks = {
   signIn?: string | null;
   account?: string | null;
 };
+
+export type GatewayType = 'mx-entry' | 'mx-exit' | 'wg';
+
+export type Score = 'none' | 'low' | 'medium' | 'high';
+
+export type Gateway = {
+  id: string;
+  type: GatewayType;
+  name: string;
+  country: Country;
+  mxScore: Score;
+  wgScore: Score;
+};
+
+export type GatewaysByCountry = {
+  country: Country;
+  gateways: Gateway[];
+  type: GatewayType;
+};
+
+export function isGateway(node: Gateway | Country): node is Gateway {
+  return (
+    (node as Gateway).id !== undefined && (node as Gateway).type !== undefined
+  );
+}
+
+export function isCountry(node: Gateway | Country): node is Country {
+  return (
+    (node as Country).code !== undefined && (node as Country).name !== undefined
+  );
+}

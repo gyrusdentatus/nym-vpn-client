@@ -13,12 +13,13 @@ use crate::{
 
 #[derive(Default, Debug, Serialize, Deserialize, TS, Clone, PartialEq, Eq)]
 #[ts(export)]
+#[serde(rename_all = "kebab-case")]
 pub enum VpnMode {
     Mixnet,
     // ⚠ keep this default in sync with the one declared in
     // src/constants.ts
     #[default]
-    TwoHop,
+    Wg,
 }
 
 #[derive(Debug, Default)]
@@ -34,7 +35,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(db: &Db, config: &AppConfig, cli: &Cli) -> Self {
         let vpn_mode = db
-            .get_typed::<VpnMode>(Key::VpnMode)
+            .get_typed::<VpnMode>(Key::VpnMode.as_ref())
             .inspect_err(|e| error!("failed to retrieve vpn mode from db: {e}"))
             .ok()
             .flatten()

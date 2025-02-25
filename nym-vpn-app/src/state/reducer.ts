@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
+import * as _ from 'lodash-es';
 import {
   DefaultCountry,
   DefaultRootFontSize,
   DefaultThemeMode,
-  DefaultVpnMode,
 } from '../constants';
 import {
   AccountLinks,
@@ -14,6 +14,9 @@ import {
   Country,
   DaemonInfo,
   DaemonStatus,
+  Gateway,
+  GatewayType,
+  GatewaysByCountry,
   NodeHop,
   ThemeMode,
   Tunnel,
@@ -22,6 +25,7 @@ import {
   UiTheme,
   VpnMode,
 } from '../types';
+import { S_STATE } from '../static';
 
 export type StateAction =
   | { type: 'init-done' }
@@ -50,28 +54,26 @@ export type StateAction =
   | { type: 'set-theme-mode'; mode: ThemeMode }
   | { type: 'system-theme-changed'; theme: UiTheme }
   | {
-      type: 'set-country-list';
-      payload: { hop: NodeHop; countries: Country[] };
+      type: 'set-gateways';
+      payload: { type: GatewayType; gateways: GatewaysByCountry[] };
     }
   | {
-      type: 'set-fast-country-list';
-      payload: { countries: Country[] };
+      type: 'set-gateways-loading';
+      payload: { type: GatewayType; loading: boolean };
     }
   | {
-      type: 'set-countries-loading';
-      payload: { hop: NodeHop; loading: boolean };
+      type: 'set-gateways-error';
+      payload: { type: GatewayType; error: AppError | null };
     }
   | {
-      type: 'set-node-location';
-      payload: { hop: NodeHop; location: Country };
+      type: 'set-node';
+      payload: { hop: NodeHop; node: Country | Gateway };
     }
   | { type: 'set-root-font-size'; size: number }
   | { type: 'set-code-deps-js'; dependencies: CodeDependency[] }
   | { type: 'set-code-deps-rust'; dependencies: CodeDependency[] }
   | { type: 'set-autostart'; enabled: boolean }
   | { type: 'set-account'; stored: boolean }
-  | { type: 'set-entry-countries-error'; payload: AppError | null }
-  | { type: 'set-exit-countries-error'; payload: AppError | null }
   | { type: 'set-account-links'; links: AccountLinks | null };
 
 export const initialState: AppState = {
@@ -80,8 +82,9 @@ export const initialState: AppState = {
   tunnel: null,
   tunnelError: null,
   daemonStatus: 'NotOk',
+  networkEnv: 'mainnet',
   version: null,
-  vpnMode: DefaultVpnMode,
+  vpnMode: S_STATE.vpnModeAtStart,
   uiTheme: 'Light',
   themeMode: DefaultThemeMode,
   progressMessages: [],
@@ -89,21 +92,20 @@ export const initialState: AppState = {
   autoConnect: false,
   monitoring: false,
   desktopNotifications: true,
-  entryNodeLocation: DefaultCountry,
-  exitNodeLocation: DefaultCountry,
-  entryCountryList: [],
-  exitCountryList: [],
-  entryCountriesLoading: true,
-  exitCountriesLoading: true,
+  entryNode: DefaultCountry,
+  exitNode: DefaultCountry,
+  mxEntryGateways: [],
+  mxExitGateways: [],
+  wgGateways: [],
+  mxEntryGatewaysLoading: true,
+  mxExitGatewaysLoading: true,
+  wgGatewaysLoading: true,
   rootFontSize: DefaultRootFontSize,
   codeDepsRust: [],
   codeDepsJs: [],
   account: false,
-  fetchMnCountries: async () => {
+  fetchGateways: async () => {
     /*  SCARECROW */
-  },
-  fetchWgCountries: async () => {
-    /* SCARECROW */
   },
 };
 
@@ -125,16 +127,16 @@ export function reducer(state: AppState, action: StateAction): AppState {
         daemonVersion: action.info.version,
         networkEnv: action.info.network,
       };
-    case 'set-node-location':
+    case 'set-node':
       if (action.payload.hop === 'entry') {
         return {
           ...state,
-          entryNodeLocation: action.payload.location,
+          entryNode: action.payload.node,
         };
       }
       return {
         ...state,
-        exitNodeLocation: action.payload.location,
+        exitNode: action.payload.node,
       };
     case 'set-vpn-mode':
       return {
@@ -156,33 +158,38 @@ export function reducer(state: AppState, action: StateAction): AppState {
         ...state,
         desktopNotifications: action.enabled,
       };
-    case 'set-country-list':
-      if (action.payload.hop === 'entry') {
+    case 'set-gateways': {
+      let prop: keyof AppState = 'wgGateways';
+      if (action.payload.type === 'mx-entry') {
+        prop = 'mxEntryGateways';
+      }
+      if (action.payload.type === 'mx-exit') {
+        prop = 'mxExitGateways';
+      }
+      if (!_.isEqual(action.payload.gateways, state[prop])) {
         return {
           ...state,
-          entryCountryList: action.payload.countries,
+          [prop]: action.payload.gateways,
+        };
+      }
+      return state;
+    }
+    case 'set-gateways-loading':
+      if (action.payload.type === 'mx-entry') {
+        return {
+          ...state,
+          mxEntryGatewaysLoading: action.payload.loading,
+        };
+      }
+      if (action.payload.type === 'mx-exit') {
+        return {
+          ...state,
+          mxExitGatewaysLoading: action.payload.loading,
         };
       }
       return {
         ...state,
-        exitCountryList: action.payload.countries,
-      };
-    case 'set-fast-country-list':
-      return {
-        ...state,
-        entryCountryList: action.payload.countries,
-        exitCountryList: action.payload.countries,
-      };
-    case 'set-countries-loading':
-      if (action.payload.hop === 'entry') {
-        return {
-          ...state,
-          entryCountriesLoading: action.payload.loading,
-        };
-      }
-      return {
-        ...state,
-        exitCountriesLoading: action.payload.loading,
+        wgGatewaysLoading: action.payload.loading,
       };
     case 'set-tunnel':
       return {
@@ -295,15 +302,22 @@ export function reducer(state: AppState, action: StateAction): AppState {
         ...state,
         codeDepsRust: action.dependencies,
       };
-    case 'set-entry-countries-error':
+    case 'set-gateways-error':
+      if (action.payload.type === 'mx-entry') {
+        return {
+          ...state,
+          mxEntryGatewaysError: action.payload.error,
+        };
+      }
+      if (action.payload.type === 'mx-exit') {
+        return {
+          ...state,
+          mxExitGatewaysError: action.payload.error,
+        };
+      }
       return {
         ...state,
-        entryCountriesError: action.payload,
-      };
-    case 'set-exit-countries-error':
-      return {
-        ...state,
-        exitCountriesError: action.payload,
+        wgGatewaysError: action.payload.error,
       };
     case 'set-account-links':
       return {

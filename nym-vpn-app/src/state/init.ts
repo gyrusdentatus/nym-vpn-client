@@ -4,11 +4,11 @@ import { getVersion } from '@tauri-apps/api/app';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 import { isEnabled as isAutostartEnabled } from '@tauri-apps/plugin-autostart';
 import {
-  CountryCacheDuration,
   DefaultCountry,
   DefaultRootFontSize,
   DefaultThemeMode,
   DefaultVpnMode,
+  GatewaysCacheDuration,
 } from '../constants';
 import { getJsLicenses, getRustLicenses } from '../data';
 import { kvGet } from '../kvStore';
@@ -16,6 +16,9 @@ import {
   AccountLinks,
   CodeDependency,
   Country,
+  Gateway,
+  GatewaysByCountry,
+  NodeHop,
   StateDispatch,
   ThemeMode,
   TunnelStateIpc,
@@ -24,8 +27,8 @@ import {
   VpndStatus,
 } from '../types';
 import { S_STATE } from '../static';
-import { MCache } from '../cache';
 import { Notification } from '../contexts';
+import { CCache } from '../cache';
 import { tunnelUpdate } from './tunnelUpdate';
 import { TauriReq, daemonStatusUpdate, fireRequests } from './helper';
 
@@ -38,28 +41,43 @@ const getDaemonStatus = async () => {
   return await invoke<VpndStatus>('daemon_status');
 };
 
-// init country list
-const getEntryCountries = async () => {
-  const mode = (await kvGet<VpnMode>('VpnMode')) || DefaultVpnMode;
-  const countries = await invoke<Country[]>('get_countries', {
-    vpnMode: mode,
-    nodeType: 'Entry',
-  });
-  return { countries, mode };
+// init gateway list
+const getMxGateways = async (node: NodeHop) => {
+  let gateways = await CCache.get<GatewaysByCountry[]>(
+    `cache-mx-${node}-gateways`,
+  );
+  if (!gateways) {
+    gateways = await invoke<GatewaysByCountry[] | null>('get_gateways', {
+      nodeType: node === 'entry' ? 'mx-entry' : 'mx-exit',
+    });
+    await CCache.set(
+      `cache-mx-${node}-gateways`,
+      gateways || [],
+      GatewaysCacheDuration,
+    );
+  }
+  return gateways;
 };
-const getExitCountries = async () => {
-  const mode = (await kvGet<VpnMode>('VpnMode')) || DefaultVpnMode;
-  const countries = await invoke<Country[]>('get_countries', {
-    vpnMode: mode,
-    nodeType: 'Exit',
-  });
-  return { countries, mode };
+
+const getWgGateways = async () => {
+  let gateways = await CCache.get<GatewaysByCountry[]>(`cache-wg-gateways`);
+  if (!gateways) {
+    gateways = await invoke<GatewaysByCountry[] | null>('get_gateways', {
+      nodeType: 'wg',
+    });
+    await CCache.set(
+      'cache-wg-gateways',
+      gateways || [],
+      GatewaysCacheDuration,
+    );
+  }
+  return gateways;
 };
 
 const getTheme = async () => {
   const winTheme: UiTheme =
     (await getCurrentWebviewWindow().theme()) === 'dark' ? 'Dark' : 'Light';
-  const themeMode = await kvGet<ThemeMode>('UiTheme');
+  const themeMode = await kvGet<ThemeMode>('ui-theme');
   return { winTheme, themeMode };
 };
 
@@ -83,41 +101,49 @@ export async function initFirstBatch(
     },
   };
 
-  const getEntryLocationRq: TauriReq<() => Promise<Country | undefined>> = {
-    name: 'getEntryLocation',
-    request: () => kvGet<Country>('EntryNodeLocation'),
-    onFulfilled: (location) => {
-      if (location) {
-        dispatch({
-          type: 'set-node-location',
-          payload: {
-            hop: 'entry',
-            location,
-          },
-        });
-      } else {
-        console.info('no entry country saved, using default', DefaultCountry);
-      }
-    },
-  };
+  const getEntryNodeRq: TauriReq<() => Promise<Gateway | Country | undefined>> =
+    {
+      name: 'getEntryNode',
+      request: () => kvGet<Gateway | Country>('entry-node'),
+      onFulfilled: (node) => {
+        if (node) {
+          dispatch({
+            type: 'set-node',
+            payload: {
+              hop: 'entry',
+              node,
+            },
+          });
+        } else {
+          console.info(
+            'no entry node saved, using default country',
+            DefaultCountry,
+          );
+        }
+      },
+    };
 
-  const getExitLocationRq: TauriReq<() => Promise<Country | undefined>> = {
-    name: 'getExitLocation',
-    request: () => kvGet<Country>('ExitNodeLocation'),
-    onFulfilled: (location) => {
-      if (location) {
-        dispatch({
-          type: 'set-node-location',
-          payload: {
-            hop: 'exit',
-            location,
-          },
-        });
-      } else {
-        console.info('no exit country saved, using default', DefaultCountry);
-      }
-    },
-  };
+  const getExitNodeRq: TauriReq<() => Promise<Gateway | Country | undefined>> =
+    {
+      name: 'getExitNode',
+      request: () => kvGet<Gateway | Country>('exit-node'),
+      onFulfilled: (node) => {
+        if (node) {
+          dispatch({
+            type: 'set-node',
+            payload: {
+              hop: 'exit',
+              node,
+            },
+          });
+        } else {
+          console.info(
+            'no exit node saved, using default country',
+            DefaultCountry,
+          );
+        }
+      },
+    };
 
   const getStoredAccountRq: TauriReq<() => Promise<boolean | undefined>> = {
     name: 'getStoredAccountRq',
@@ -156,7 +182,7 @@ export async function initFirstBatch(
 
   const getVpnModeRq: TauriReq<() => Promise<VpnMode | undefined>> = {
     name: 'getVpnMode',
-    request: () => kvGet<VpnMode>('VpnMode'),
+    request: () => kvGet<VpnMode>('vpn-mode'),
     onFulfilled: (vpnMode) => {
       S_STATE.vpnModeInit = true;
       dispatch({ type: 'set-vpn-mode', mode: vpnMode || DefaultVpnMode });
@@ -167,7 +193,7 @@ export async function initFirstBatch(
     () => Promise<boolean | undefined>
   > = {
     name: 'getDesktopNotificationsRq',
-    request: () => kvGet<boolean>('DesktopNotifications'),
+    request: () => kvGet<boolean>('desktop-notifications'),
     onFulfilled: (enabled) => {
       dispatch({
         type: 'set-desktop-notifications',
@@ -178,7 +204,7 @@ export async function initFirstBatch(
 
   const getRootFontSizeRq: TauriReq<() => Promise<number | undefined>> = {
     name: 'getRootFontSize',
-    request: () => kvGet<number>('UiRootFontSize'),
+    request: () => kvGet<number>('ui-root-font-size'),
     onFulfilled: (size) => {
       // if a font size was saved, set the UI font size accordingly
       if (size) {
@@ -193,7 +219,7 @@ export async function initFirstBatch(
 
   const getMonitoringRq: TauriReq<() => Promise<boolean | undefined>> = {
     name: 'getMonitoring',
-    request: () => kvGet<boolean>('Monitoring'),
+    request: () => kvGet<boolean>('monitoring'),
     onFulfilled: (monitoring) => {
       dispatch({ type: 'set-monitoring', monitoring: monitoring || false });
     },
@@ -226,8 +252,8 @@ export async function initFirstBatch(
     initStateRq,
     initDaemonStatusRq,
     getVpnModeRq,
-    getEntryLocationRq,
-    getExitLocationRq,
+    getEntryNodeRq,
+    getExitNodeRq,
     getVersionRq,
     getThemeRq,
     getStoredAccountRq,
@@ -240,48 +266,57 @@ export async function initFirstBatch(
 }
 
 export async function initSecondBatch(dispatch: StateDispatch) {
-  const getEntryCountriesRq: TauriReq<typeof getEntryCountries> = {
-    name: 'get_countries',
-    request: () => getEntryCountries(),
-    onFulfilled: ({ countries, mode }) => {
+  const getMxEntryGatewaysRq: TauriReq<typeof getMxGateways> = {
+    name: 'get_mx_entry_gateways',
+    request: () => getMxGateways('entry'),
+    onFulfilled: (gateways) => {
+      if (!gateways) return;
       dispatch({
-        type: 'set-country-list',
+        type: 'set-gateways',
         payload: {
-          hop: 'entry',
-          countries,
+          type: 'mx-entry',
+          gateways: gateways || [],
         },
       });
-      MCache.set(
-        mode === 'Mixnet' ? `mn-entry-countries` : 'wg-countries',
-        countries,
-        CountryCacheDuration,
-      );
       dispatch({
-        type: 'set-countries-loading',
-        payload: { hop: 'entry', loading: false },
+        type: 'set-gateways-loading',
+        payload: { type: 'mx-entry', loading: false },
       });
     },
   };
 
-  const getExitCountriesRq: TauriReq<typeof getExitCountries> = {
-    name: 'get_countries',
-    request: () => getExitCountries(),
-    onFulfilled: ({ countries, mode }) => {
+  const getMxExitGatewaysRq: TauriReq<typeof getMxGateways> = {
+    name: 'get_mx_exit_gateways',
+    request: () => getMxGateways('exit'),
+    onFulfilled: (gateways) => {
       dispatch({
-        type: 'set-country-list',
+        type: 'set-gateways',
         payload: {
-          hop: 'exit',
-          countries,
+          type: 'mx-exit',
+          gateways: gateways || [],
         },
       });
-      MCache.set(
-        mode === 'Mixnet' ? `mn-exit-countries` : 'wg-countries',
-        countries,
-        CountryCacheDuration,
-      );
       dispatch({
-        type: 'set-countries-loading',
-        payload: { hop: 'exit', loading: false },
+        type: 'set-gateways-loading',
+        payload: { type: 'mx-exit', loading: false },
+      });
+    },
+  };
+
+  const getWgGatewaysRq: TauriReq<typeof getWgGateways> = {
+    name: 'get_wg_gateways',
+    request: () => getWgGateways(),
+    onFulfilled: (gateways) => {
+      dispatch({
+        type: 'set-gateways',
+        payload: {
+          type: 'wg',
+          gateways: gateways || [],
+        },
+      });
+      dispatch({
+        type: 'set-gateways-loading',
+        payload: { type: 'wg', loading: false },
       });
     },
   };
@@ -309,10 +344,12 @@ export async function initSecondBatch(dispatch: StateDispatch) {
     },
   };
 
-  await fireRequests([
-    getEntryCountriesRq,
-    getExitCountriesRq,
-    getAccountLinksRq,
-    getAutostart,
-  ]);
+  let gatewayRequests;
+  if (S_STATE.vpnModeAtStart === 'wg') {
+    gatewayRequests = [getWgGatewaysRq];
+  } else {
+    gatewayRequests = [getMxEntryGatewaysRq, getMxExitGatewaysRq];
+  }
+
+  await fireRequests([...gatewayRequests, getAccountLinksRq, getAutostart]);
 }

@@ -10,7 +10,7 @@ import { Button, Dialog, MsIcon, SettingsMenuCard } from '../../ui';
 import { routes } from '../../router';
 import { BackendError, StateDispatch } from '../../types';
 import { useI18nError } from '../../hooks';
-import { MCache } from '../../cache';
+import { CCache } from '../../cache';
 
 function Logout() {
   const [isOpen, setIsOpen] = useState(false);
@@ -43,8 +43,8 @@ function Logout() {
         text: t('logout.success', { ns: 'notifications' }),
         position: 'top',
       });
-      MCache.del('account-id');
-      MCache.del('device-id');
+      await CCache.del('cache-account-id');
+      await CCache.del('cache-device-id');
       dispatch({ type: 'reset-error' });
     } catch (e) {
       console.warn('failed to logout', e);
@@ -71,7 +71,11 @@ function Logout() {
         onClick={() => setIsOpen(true)}
         disabled={daemonStatus === 'NotOk' || state !== 'Disconnected'}
       />
-      <Dialog open={isOpen} onClose={onClose}>
+      <Dialog
+        open={isOpen}
+        onClose={onClose}
+        className="flex flex-col items-center gap-6"
+      >
         <div className="flex flex-col items-center gap-4 w-11/12">
           <MsIcon
             icon="info"
