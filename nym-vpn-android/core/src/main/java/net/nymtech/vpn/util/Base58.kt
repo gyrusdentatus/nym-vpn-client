@@ -1,5 +1,6 @@
 package net.nymtech.vpn.util
 
+import timber.log.Timber
 import java.math.BigInteger
 
 object Base58 {
@@ -19,7 +20,8 @@ object Base58 {
 			val bytes = decode(input)
 
 			return bytes.size == expectedByteLength
-		} catch (e: Exception) {
+		} catch (e: IllegalArgumentException) {
+			Timber.e(e)
 			return false
 		}
 	}
