@@ -49,6 +49,7 @@ function Login() {
 
     setLoading(true);
     try {
+      console.info('logging in');
       await invoke<number | null>('add_account', { mnemonic: phrase.trim() });
       navigate(routes.root);
       dispatch({ type: 'set-account', stored: true });
@@ -114,9 +115,11 @@ function Login() {
             onClick={handleClick}
             disabled={daemonStatus === 'down' || state !== 'Disconnected'}
             className={clsx(
+              'h-14',
               daemonStatus === 'down' &&
                 'opacity-50 disabled:opacity-50 hover:opacity-50',
             )}
+            spinner={loading}
           >
             {t('login-button')}
           </Button>
