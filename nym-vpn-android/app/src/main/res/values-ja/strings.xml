@@ -12,7 +12,7 @@
     <string name="disconnecting">接続解除中</string>
     <string name="connecting">接続中</string>
     <string name="five_hop_description">支払い、Eメール、メッセージに最適</string>
-	<string name="first_hop">エントリーロケーション</string>
+    <string name="first_hop">エントリーロケーション</string>
     <string name="last_hop">出口ロケーション</string>
     <string name="connect">接続</string>
     <string name="disconnect">接続解除</string>
@@ -77,7 +77,7 @@
     <string name="and_acknowledge">なります</string>
     <string name="share_anonymous_analytics">製品分析を匿名で報告</string>
     <string name="anonymous_error_reports">匿名のエラーレポート</string>
-	<string name="missing_credential">認証情報が不足しています</string>
+    <string name="missing_credential">認証情報が不足しています</string>
     <string name="country_load_failure">hop（経由）する国の読み込みに失敗しました</string>
     <string name="enable_shortcuts">アプリのショートカットを可能にする</string>
     <string name="disabled_while_connected">VPN接続中は無効です</string>
@@ -198,4 +198,17 @@
     <string name="action_requires_tunnel_down">アクションにはトンネルダウンが必要です</string>
     <string name="selected_exit_unavailable">選択した国は出口として利用できません。別の国を選択してください。</string>
     <string name="loading">読み込み中</string>
+    <string name="disabled_while_connecting">VPN接続中は無効です</string>
+    <string name="entry">入口</string>
+    <string name="how_to_run_gateway">gatewayの実行方法</string>
+    <string name="contact_for_help">お問い合わせはこちら</string>
+    <string name="servers">サーバー</string>
+    <string name="local_logs">ログ（ローカルに保存）</string>
+    <string name="no_results_found">見つかりませんでした。</string>
+    <string name="two_hop_explanation">最速な2サーバー接続をお試しください。検閲耐性のあるWireGuardを改良したAmneziaWGを採用しており、高速なブラウジング、ストリーミング、ファイル共有に最適です。</string>
+    <string name="exit">出口</string>
+    <string name="or_learn">学ぶ</string>
+    <string name="try_another_server_name">別の地点を試すか、サーバー名を確認してください。</string>
+    <string name="two_hop_title">高速 (WireGuard<small>*</small>)</string>
+    <string name="anonymous">匿名</string>
 </resources>

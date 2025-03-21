@@ -10,7 +10,7 @@
     <string name="five_hop_mixnet">Anonim (mixnet)</string>
     <string name="disconnecting">Bağlantı koptu</string>
     <string name="first_hop">Giriş lokasyonu</string>
-	<string name="disconnected">Bağlantı kesildi</string>
+    <string name="disconnected">Bağlantı kesildi</string>
     <string name="init_client">İstemci başlatılıyor…</string>
     <string name="establishing_connection">Bağlantı kuruluyor</string>
     <string name="connection_time">Bağlantı süresi</string>
@@ -95,7 +95,7 @@
     <string name="app_shortcuts">Uygulama kısayolları</string>
     <string name="country_load_failure">Hop ülkeleri yüklenemedi</string>
     <string name="missing_credential">Anahtar eksik</string>
-	<string name="gateways_error">Gateway\'ler bulunamadı</string>
+    <string name="gateways_error">Gateway\'ler bulunamadı</string>
     <string name="anonymous_error_reports">Anonim hata raporları</string>
     <string name="disabled_while_connected">VPN bağlıyken devre dışı</string>
     <string name="exception_permission_not_granted">Gerekli izin verilmemiş.</string>
@@ -122,7 +122,7 @@
     <string name="mode_selection">Mod seçimi</string>
     <string name="five_hop_explanation">Bağlantınızı mixnet üzerinden 5 sunucuya yönlendirerek maksimum düzeyde gizliliğin tadını çıkarın. Ödemeleri, e-postaları ve mesajları güvenli bir şekilde yönetmek için mükemmeldir.</string>
     <string name="continue_reading">Okumaya devam edin</string>
-	<string name="entry_location">Giriş konumu</string>
+    <string name="entry_location">Giriş konumu</string>
     <string name="exit_location">Çıkış konumu</string>
     <string name="language">Dil</string>
     <string name="entry_location_selector">Entry konumu seçici</string>
@@ -198,4 +198,17 @@
     <string name="no_internet">Cihazınızın internet bağlantısı yok</string>
     <string name="waiting_for_connection">Cihaz çevrimiçi olduğunda bağlanacaktır</string>
     <string name="loading">Yükleniyor</string>
+    <string name="two_hop_explanation">Maksimum hızı 2 sunucu bağlantısıyla deneyimleyin. Bu mod, hızlı tarama, akış ve dosya paylaşımı için ideal olan, sansüre dirençli bir WireGuard versiyonu olan AmneziaWG\'yi kullanır.</string>
+    <string name="disabled_while_connecting">VPN bağlantısı sırasında devre dışı bırakıldı</string>
+    <string name="servers">sunucular</string>
+    <string name="or_learn">ya da öğrenin</string>
+    <string name="exit">Çıkış</string>
+    <string name="entry">Giriş</string>
+    <string name="how_to_run_gateway">Gateway nasıl çalıştırılır.</string>
+    <string name="contact_for_help">Yardım için bizimle iletişime geçin</string>
+    <string name="local_logs">Günlükler (yerel olarak saklanır)</string>
+    <string name="try_another_server_name">Başka bir konum deneyin veya sunucu adını kontrol edin.</string>
+    <string name="no_results_found">Sonuç bulunamadı.</string>
+    <string name="two_hop_title">Hızlı (WireGuard<small>*</small>)</string>
+    <string name="anonymous">Anonim</string>
 </resources>

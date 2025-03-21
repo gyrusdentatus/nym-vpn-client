@@ -87,12 +87,12 @@
     <string name="and_acknowledge">e reconhecer a NymVPN\'s</string>
     <string name="share_anonymous_analytics">Compartilhe análises anônimas de produtos</string>
     <string name="anonymous_error_reports">Relatórios de erros anônimos</string>
-	<string name="missing_credential">Credencial ausente</string>
+    <string name="missing_credential">Credencial ausente</string>
     <string name="country_load_failure">Falha ao carregar países de salto</string>
     <string name="app_shortcuts">Atalhos do aplicativo</string>
     <string name="enable_shortcuts">Ativar atalhos do aplicativo</string>
     <string name="five_hop_mixnet">Anônimo (mixnet)</string>
-	<string name="last_hop_selection">Local de saída</string>
+    <string name="last_hop_selection">Local de saída</string>
     <string name="privacy_policy">Declaração de privacidade</string>
     <string name="licenses">Licenças</string>
     <string name="open_github">Abrir um problema no GitHub</string>
@@ -198,4 +198,17 @@
     <string name="same_entry_exit_message">Para fins de privacidade, o NymVPN não usará o mesmo gateway para entrada e saída. Reconecte-se ou escolha locais diferentes.</string>
     <string name="device_id">ID do dispositivo:</string>
     <string name="loading">Carregando</string>
+    <string name="two_hop_explanation">Experimente a velocidade máxima com a conectividade de 2 servidores. Esse modo aproveita o AmneziaWG, uma versão resistente à censura do WireGuard, ideal para navegação rápida, streaming e compartilhamento de arquivos.</string>
+    <string name="disabled_while_connecting">Desativado durante a conexão com a VPN</string>
+    <string name="how_to_run_gateway">como executar um gateway.</string>
+    <string name="contact_for_help">Entre em contato conosco para obter ajuda</string>
+    <string name="local_logs">Registros (armazenados localmente)</string>
+    <string name="exit">Saída</string>
+    <string name="entry">Entrada</string>
+    <string name="no_results_found">Nenhum resultado encontrado.</string>
+    <string name="or_learn">ou aprender</string>
+    <string name="try_another_server_name">Tente outro local ou verifique o nome do servidor.</string>
+    <string name="servers">servidores</string>
+    <string name="two_hop_title">Rápido (WireGuard<small>*</small>)</string>
+    <string name="anonymous">Anônimo</string>
 </resources>
