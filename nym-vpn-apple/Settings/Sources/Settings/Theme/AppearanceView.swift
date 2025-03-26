@@ -17,7 +17,7 @@ public struct AppearanceView: View {
         VStack {
             navbar()
             themeOptions()
-                .frame(maxWidth: Device.type == .ipad ? 358 : 390)
+                .frame(maxWidth: MagicNumbers.maxWidth)
             Spacer()
         }
         .navigationBarBackButtonHidden(true)

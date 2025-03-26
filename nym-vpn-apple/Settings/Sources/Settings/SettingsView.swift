@@ -28,9 +28,10 @@ private extension SettingsView {
                 Spacer()
                     .frame(height: 24)
                 settingsList()
+                accountIdentifier()
             }
             .scrollIndicators(.hidden)
-            .frame(maxWidth: Device.type == .ipad ? 358 : 390)
+            .frame(maxWidth: MagicNumbers.maxWidth)
             Spacer()
         }
         .navigationBarBackButtonHidden(true)
@@ -91,5 +92,21 @@ private extension SettingsView {
                     }
                 )
         )
+    }
+
+    @ViewBuilder
+    func accountIdentifier() -> some View {
+        if let accountIdentifier = viewModel.credentialsManager.accountIdentifier, !accountIdentifier.isEmpty {
+            HStack {
+                Text("\("settings.accountID".localizedString): \(accountIdentifier)")
+                    .foregroundStyle(NymColor.settingsVersion)
+                    .textStyle(.BodyLegacy.Medium.regular)
+                    .padding(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 0))
+                Spacer()
+            }
+            .onTapGesture {
+                viewModel.copyToPasteboard(text: accountIdentifier)
+            }
+        }
     }
 }
