@@ -7,32 +7,20 @@ import { PulseDot } from '../../ui';
 function ConnectionBadge({ state }: { state: TunnelState }) {
   const { t } = useTranslation('home');
 
-  const statusBadgeDynStyles = {
-    Connected: [
-      'text-malachite-moss dark:text-malachite',
-      'bg-vert-prasin/10 dark:bg-mine-shaft',
-    ],
-    Disconnected: [
-      'bg-cement-feet/8 text-coal-mine-light',
-      'dark:bg-mine-shaft dark:text-bombay',
-    ],
-    Connecting: [
-      'bg-cement-feet/8 text-baltic-sea',
-      'dark:bg-mine-shaft dark:text-white',
-    ],
-    Disconnecting: [
-      'bg-cement-feet/8 text-baltic-sea',
-      'dark:bg-mine-shaft dark:text-white',
-    ],
-    Error: ['bg-cement-feet/8', 'text-teaberry', 'dark:bg-mine-shaft'],
-    Offline: [
-      'bg-rose-bruni/95 dark:bg-rouge-basque/85',
-      'text-baltic-sea dark:text-mercury-pinkish',
-    ],
-    OfflineAutoReconnect: [
-      'bg-cement-feet/8 dark:bg-mine-shaft',
-      'text-baltic-sea dark:text-white',
-    ],
+  const getBadgeStyle = (state: TunnelState) => {
+    switch (state) {
+      case 'Connected':
+        return ['text-malachite-moss dark:text-malachite bg-malachite/10!'];
+      case 'Disconnected':
+        return ['text-iron dark:text-bombay'];
+      case 'Connecting':
+      case 'Disconnecting':
+        return ['text-baltic-sea dark:text-white'];
+      case 'Error':
+      case 'Offline':
+      case 'OfflineAutoReconnect':
+        return ['text-baltic-sea bg-aphrodisiac!'];
+    }
   };
 
   const getStatusText = (state: TunnelState) => {
@@ -60,15 +48,15 @@ function ConnectionBadge({ state }: { state: TunnelState }) {
       transition={{ duration: 0.1, ease: 'easeOut' }}
       className={clsx([
         'flex justify-center items-center tracking-normal gap-4 min-w-36',
-        ...statusBadgeDynStyles[state],
-        'text-lg font-bold py-3 px-6 rounded-full tracking-normal',
+        'bg-mercury dark:bg-mine-shaft',
+        ...getBadgeStyle(state),
+        'text-lg font-medium py-3 px-6 rounded-full tracking-normal',
       ])}
     >
       {getStatusText(state)}
       {(state === 'Connecting' || state === 'Disconnecting') && (
         <PulseDot color="cornflower" />
       )}
-      {state === 'OfflineAutoReconnect' && <PulseDot color="red" />}
     </motion.div>
   );
 }

@@ -34,10 +34,10 @@ function ConnectionTimer() {
       transition={{ duration: 0.1, ease: 'easeOut' }}
       className="flex flex-col items-center gap-2 cursor-default select-none"
     >
-      <p className="text-sm font-bold text-dim-gray dark:text-mercury-mist">
+      <p className="text-base text-iron dark:text-bombay">
         {t('connection-time')}
       </p>
-      <p className="text-sm font-bold text-baltic-sea dark:text-white">
+      <p className="text-base text-baltic-sea dark:text-white">
         {connectionTime}
       </p>
     </motion.div>

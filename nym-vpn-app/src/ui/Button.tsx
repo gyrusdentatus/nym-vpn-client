@@ -45,8 +45,8 @@ function Button({
         ];
       case 'gray':
         return [
-          'bg-dim-gray/70 data-hover:bg-dim-gray/85',
-          'dark:bg-dusty-grey dark:data-hover:bg-dusty-grey/80',
+          'bg-iron/70 data-hover:bg-iron/90',
+          'dark:bg-bombay dark:data-hover:bg-bombay/80',
         ];
       case 'cornflower':
         return [
@@ -55,8 +55,8 @@ function Button({
         ];
       case 'red':
         return [
-          'bg-rouge-ecarlate data-hover:bg-rouge-ecarlate/85',
-          'dark:data-hover:bg-rouge-ecarlate/80',
+          'bg-aphrodisiac data-hover:bg-aphrodisiac/85',
+          'dark:data-hover:bg-aphrodisiac/80',
         ];
     }
   };
@@ -76,11 +76,11 @@ function Button({
       case 'malachite':
         return 'text-malachite';
       case 'gray':
-        return 'text-dim-gray dark:text-dusty-grey';
+        return 'text-iron dark:text-bombay';
       case 'cornflower':
         return 'text-cornflower';
       case 'red':
-        return 'text-rouge-ecarlate';
+        return 'text-aphrodisiac';
     }
   };
 
@@ -90,12 +90,12 @@ function Button({
     <HuButton
       className={clsx([
         'flex justify-center items-center w-full',
-        'rounded-lg text-lg font-bold py-3 px-6',
+        'rounded-lg text-lg font-medium py-3 px-6',
         outline ? getOutlineTextColor() : 'text-black dark:text-baltic-sea',
         'focus:outline-hidden',
         'transition data-disabled:opacity-60 data-active:ring-0',
         outline && 'data-hover:ring-1 data-hover:ring-malachite',
-        'shadow-sm tracking-normal cursor-default',
+        'tracking-normal cursor-default',
         colorStyle,
         className && className,
       ])}

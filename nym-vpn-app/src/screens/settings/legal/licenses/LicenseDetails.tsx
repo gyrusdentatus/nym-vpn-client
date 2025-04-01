@@ -26,7 +26,7 @@ function LicenseDetails() {
   const { licenses, name, repository, authors, version } = license || {};
 
   const label = (label: string) => (
-    <p className="truncate text-dim-gray dark:text-mercury-mist select-none cursor-default">
+    <p className="truncate text-iron dark:text-bombay select-none cursor-default">
       {label}:
     </p>
   );
@@ -37,7 +37,7 @@ function LicenseDetails() {
         <article className="flex flex-col gap-4">
           <div className="flex flex-row items-center gap-4">
             {label(t('name'))}
-            <p className="truncate font-semibold">{name}</p>
+            <p className="truncate font-medium">{name}</p>
           </div>
           <div className="flex flex-row items-center gap-4">
             {label(t('version'))}
@@ -89,7 +89,7 @@ function LicenseDetails() {
           </div>
         </article>
       ) : (
-        <span className="mt-4 pl-4 italic text-dim-gray dark:text-mercury-mist select-none cursor-default">
+        <span className="mt-4 pl-4 italic text-iron dark:text-bombay select-none cursor-default">
           {t('no-data')}
         </span>
       )}

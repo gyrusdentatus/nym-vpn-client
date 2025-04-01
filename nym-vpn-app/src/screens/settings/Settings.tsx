@@ -89,9 +89,7 @@ function Settings() {
       ) : (
         <Button
           onClick={() => navigate(routes.login)}
-          disabled={
-            import.meta.env.MODE !== 'dev-browser' && daemonStatus === 'down'
-          }
+          disabled={daemonStatus === 'down'}
         >
           {t('login-button')}
         </Button>
@@ -102,24 +100,14 @@ function Settings() {
             title: t('support.title'),
             leadingIcon: 'question_answer',
             onClick: () => navigate(routes.support),
-            trailing: (
-              <MsIcon
-                icon="arrow_right"
-                className="dark:text-mercury-pinkish"
-              />
-            ),
+            trailing: <MsIcon icon="arrow_right" className="dark:text-white" />,
           },
           {
             title: t('logs.title'),
             desc: t('logs.desc'),
             leadingIcon: 'sort',
             onClick: () => navigate(routes.logs),
-            trailing: (
-              <MsIcon
-                icon="arrow_right"
-                className="dark:text-mercury-pinkish"
-              />
-            ),
+            trailing: <MsIcon icon="arrow_right" className="dark:text-white" />,
           },
           {
             title: t('error-monitoring.title'),
@@ -158,12 +146,7 @@ function Settings() {
             title: t('appearance', { ns: 'common' }),
             leadingIcon: 'view_comfy',
             onClick: () => navigate(routes.appearance),
-            trailing: (
-              <MsIcon
-                icon="arrow_right"
-                className="dark:text-mercury-pinkish"
-              />
-            ),
+            trailing: <MsIcon icon="arrow_right" className="dark:text-white" />,
           },
           {
             title: t('notifications.title'),

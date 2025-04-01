@@ -41,14 +41,14 @@ function StartupError({
     <div className={clsx([theme === 'dark' && 'dark', 'h-full'])}>
       <div
         className={clsx([
-          'min-w-64 bg-white dark:bg-oil text-baltic-sea dark:text-mercury-pinkish',
+          'min-w-64 bg-white dark:bg-charcoal text-baltic-sea dark:text-white',
           'flex flex-col items-center justify-between h-full gap-4',
           'cursor-default select-none p-6 px-6',
         ])}
       >
         <div className="flex flex-col justify-center items-center gap-2">
-          <MsIcon className="text-2xl font-bold" icon={'error'} />
-          <h1 className="text-xl font-bold tracking-wider leading-loose">
+          <MsIcon className="text-2xl font-medium" icon={'error'} />
+          <h1 className="text-xl font-medium tracking-wider leading-loose">
             Problem detected
           </h1>
         </div>
@@ -59,7 +59,7 @@ function StartupError({
         </p>
         {error?.details && (
           <div className="w-full max-h-32 overflow-auto select-text text-balance break-words">
-            <p className="text-teaberry text-center cursor-auto">
+            <p className="text-aphrodisiac text-center cursor-auto">
               {error.details}
             </p>
           </div>

@@ -23,7 +23,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
     <HuDialog
       as="div"
       className={clsx([
-        uiTheme === 'Dark' && 'dark',
+        uiTheme === 'dark' && 'dark',
         'relative z-50 focus:outline-hidden select-none cursor-default',
       ])}
       open={open}
@@ -42,7 +42,7 @@ function Dialog({ open, onClose, children, className }: DialogProps) {
             className={clsx(
               [
                 'text-base min-w-80 overflow-x-hidden',
-                'max-w-md rounded-xl bg-white dark:bg-octave p-6',
+                'max-w-md rounded-xl bg-white dark:bg-charcoal p-6',
                 'duration-200 ease-out data-closed:opacity-0',
               ],
               className,
